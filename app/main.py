@@ -535,10 +535,23 @@ async def get_object(
 
 @app.get("/object/list", response_model=List[ObjectDetails])
 async def get_objects(
-    request: GetObjectsRequest = Depends(), token: str = Depends(validate_token)
+    space_id: str,
+    types: Optional[str] = None,
+    limit: Optional[int] = Query(default=50, ge=1, le=100),
+    offset: Optional[int] = Query(default=0, ge=0),
+    sort: Optional[SortOrder] = Query(default=SortOrder.LAST_MODIFIED_DATE),
+    token: str = Depends(validate_token),
 ):
     """Get objects list"""
     try:
+        # Convert types string to list if provided
+        type_list = types.split(",") if types else None
+
+        # Create request object from query parameters
+        request = GetObjectsRequest(
+            space_id=space_id, types=type_list, limit=limit, offset=offset, sort=sort
+        )
+
         anytype_client.session_token = token
         return await anytype_client.get_objects(request)
     except APIError as e:

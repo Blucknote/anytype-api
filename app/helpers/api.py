@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
 from fastapi import HTTPException
@@ -100,15 +100,63 @@ def construct_object_url(object_id: str, space_id: str) -> str:
     return OBJECT_URL_PATTERN.format(objectId=object_id, spaceId=space_id)
 
 
-def validate_response(response: Dict[str, Any]) -> Dict[str, Any]:
+def validate_response(
+    response: Union[Dict[str, Any], List[Dict[str, Any]], str],
+) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
     """Validate and process API response"""
     if not response:
         raise APIError("Empty response from API")
 
-    if response.get("error"):
+    # Handle string responses
+    if isinstance(response, str):
+        try:
+            response = json.loads(response)
+        except json.JSONDecodeError:
+            raise APIError("Invalid JSON string response")
+
+    if isinstance(response, dict) and response.get("error"):
         raise APIError(response["error"])
 
-    return response
+    # Ensure we always return a list of dictionaries
+    if isinstance(response, dict):
+        if "types" in response:
+            types = response["types"]
+            if not isinstance(types, list):
+                types = [types]
+            return [t if isinstance(t, dict) else {"id": str(t)} for t in types]
+        if "data" in response:
+            data = response["data"]
+            if not isinstance(data, list):
+                data = [data]
+            return [d if isinstance(d, dict) else {"id": str(d)} for d in data]
+        if "spaces" in response:
+            spaces = response["spaces"]
+            if not isinstance(spaces, list):
+                spaces = [spaces]
+            return [s if isinstance(s, dict) else {"id": str(s)} for s in spaces]
+        if "members" in response:
+            members = response["members"]
+            if not isinstance(members, list):
+                members = [members]
+            return [m if isinstance(m, dict) else {"id": str(m)} for m in members]
+        if "templates" in response:
+            templates = response["templates"]
+            if not isinstance(templates, list):
+                templates = [templates]
+            return [t if isinstance(t, dict) else {"id": str(t)} for t in templates]
+        if "objects" in response:
+            objects = response["objects"]
+            if not isinstance(objects, list):
+                objects = [objects]
+            return [o if isinstance(o, dict) else {"id": str(o)} for o in objects]
+        # If no specific key found, convert the whole dict to a list
+        return [response]
+
+    if isinstance(response, list):
+        return [r if isinstance(r, dict) else {"id": str(r)} for r in response]
+
+    # If we get here, convert whatever we have to a basic dict
+    return [{"id": str(response)}]
 
 
 def prepare_request_data(data: Dict[str, Any]) -> Dict[str, Any]:
