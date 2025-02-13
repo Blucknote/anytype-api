@@ -24,26 +24,6 @@ dev = [
 ]
 
 [tool.ruff]
-# Enable all recommended rules + additional ones for code quality
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "C90", # mccabe
-    "N",   # pep8-naming
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "Q",   # flake8-quotes
-    "UP",  # pyupgrade
-    "A",   # flake8-builtins
-    "T20", # flake8-print
-    "RUF", # ruff-specific rules
-]
-
-# Never try to fix `F401` (unused imports)
-unfixable = ["F401"]
-
 # Exclude a variety of commonly ignored directories.
 exclude = [
     ".bzr",
@@ -77,6 +57,26 @@ line-length = 88
 target-version = "py38"
 
 [tool.ruff.lint]
+# Enable all recommended rules + additional ones for code quality
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "C90", # mccabe
+    "N",   # pep8-naming
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "Q",   # flake8-quotes
+    "UP",  # pyupgrade
+    "A",   # flake8-builtins
+    "T20", # flake8-print
+    "RUF", # ruff-specific rules
+]
+
+# Never try to fix `F401` (unused imports)
+unfixable = ["F401"]
+
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
