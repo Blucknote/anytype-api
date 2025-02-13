@@ -21,6 +21,7 @@ wheels/
 *.egg
 
 # Virtual Environment
+.venv
 venv/
 ENV/
 env/
@@ -43,3 +44,7 @@ env/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# other
+.goose
+.ruff_cache
