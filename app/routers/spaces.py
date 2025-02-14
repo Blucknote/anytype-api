@@ -4,16 +4,16 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from ..clients.anytype import AnytypeClient, get_anytype_client
-from ..helpers.api import APIError
-from ..helpers.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
-from ..helpers.schemas import (
+from app.clients.anytype import AnytypeClient, get_anytype_client
+from app.helpers.api import APIError
+from app.helpers.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
+from app.helpers.schemas import (
     CreateSpaceRequest,
     GetMembersRequest,
     MemberDetails,
     SpaceDetails,
 )
-from ..main import get_validated_token
+from app.main import get_validated_token
 
 router = APIRouter(prefix="/space", tags=["spaces"])
 

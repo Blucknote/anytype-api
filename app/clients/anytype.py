@@ -2,15 +2,15 @@
 
 from typing import Any, Dict, List, Optional
 
-from ..core.config import settings
-from ..helpers.api import (
+from app.core.config import settings
+from app.helpers.api import (
     APIError,
     get_endpoint,
     make_request,
     prepare_request_data,
     validate_response,
 )
-from ..helpers.schemas import (
+from app.helpers.schemas import (
     BaseResponse,
     CreateObjectRequest,
     CreateSpaceRequest,
@@ -36,7 +36,7 @@ class AnytypeClient:
 
     def __init__(
         self,
-        base_url: str = settings.anytype_api_url,
+        base_url: str = str(settings.anytype_api_url),
         session_token: str = settings.anytype_session_token,
         app_key: str = settings.anytype_app_key,
         bearer_token: Optional[str] = None,
@@ -88,14 +88,13 @@ class AnytypeClient:
             data=data,
             headers=headers,
         )
-        response = validate_response(result)
-        if (
-            isinstance(response, dict)
-            and "token" in response
-            and "session_token" in response["token"]
-        ):
-            self.session_token = response["token"]["session_token"]
-        return response
+        responses = validate_response(result)
+        if len(responses) > 0:
+            response = responses[0]
+            if "token" in response and isinstance(response["token"], dict):
+                self.session_token = response["token"].get("session_token", "")
+            return response
+        return {}
 
     async def get_auth_display_code(
         self, app_name: str = "Anytype API"
@@ -114,11 +113,14 @@ class AnytypeClient:
             data=data,
             headers=headers,
         )
-        response = validate_response(result)
-        self.challenge_id = response.get("challenge_id")
-        return DisplayCodeResponse(
-            code=response.get("code", ""), challenge_id=self.challenge_id
-        )
+        responses = validate_response(result)
+        if len(responses) > 0:
+            response = responses[0]
+            self.challenge_id = response.get("challenge_id", "")
+            return DisplayCodeResponse(
+                code=response.get("code", ""), challenge_id=self.challenge_id or ""
+            )
+        return DisplayCodeResponse(code="", challenge_id="")
 
     async def create_space(
         self, request: CreateSpaceRequest, token: Optional[str] = None
@@ -134,7 +136,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        return SpaceDetails(**validate_response(result))
+        responses = validate_response(result)
+        return SpaceDetails(**(responses[0] if responses else {}))
 
     async def get_spaces(
         self, limit: int = 50, offset: int = 0, token: Optional[str] = None
@@ -150,8 +153,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        response = validate_response(result)
-        return [SpaceDetails(**space) for space in response]
+        responses = validate_response(result)
+        return [SpaceDetails(**space) for space in responses]
 
     async def get_members(
         self, request: GetMembersRequest, token: Optional[str] = None
@@ -168,7 +171,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        return [MemberDetails(**member) for member in validate_response(result)]
+        responses = validate_response(result)
+        return [MemberDetails(**member) for member in responses]
 
     async def create_object(
         self, request: CreateObjectRequest, token: Optional[str] = None
@@ -185,7 +189,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        return ObjectDetails(**validate_response(result))
+        responses = validate_response(result)
+        return ObjectDetails(**(responses[0] if responses else {}))
 
     async def get_object(
         self, space_id: str, object_id: str, token: Optional[str] = None
@@ -199,7 +204,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        return ObjectDetails(**validate_response(result))
+        responses = validate_response(result)
+        return ObjectDetails(**(responses[0] if responses else {}))
 
     async def get_objects(
         self, request: GetObjectsRequest, token: Optional[str] = None
@@ -216,7 +222,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        return [ObjectDetails(**obj) for obj in validate_response(result)]
+        responses = validate_response(result)
+        return [ObjectDetails(**obj) for obj in responses]
 
     async def delete_object(
         self, request: DeleteObjectRequest, token: Optional[str] = None
@@ -233,7 +240,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        return BaseResponse(**validate_response(result))
+        responses = validate_response(result)
+        return BaseResponse(**(responses[0] if responses else {}))
 
     async def search_objects(
         self, request: SearchRequest, token: Optional[str] = None
@@ -250,7 +258,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        return [ObjectDetails(**obj) for obj in validate_response(result)]
+        responses = validate_response(result)
+        return [ObjectDetails(**obj) for obj in responses]
 
     async def global_search(
         self, request: GlobalSearchRequest, token: Optional[str] = None
@@ -266,7 +275,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        return [ObjectDetails(**obj) for obj in validate_response(result)]
+        responses = validate_response(result)
+        return [ObjectDetails(**obj) for obj in responses]
 
     async def get_types(
         self, request: GetTypesRequest, token: Optional[str] = None
@@ -283,7 +293,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        return [TypeDetails(**type_) for type_ in validate_response(result)]
+        responses = validate_response(result)
+        return [TypeDetails(**type_) for type_ in responses]
 
     async def get_templates(
         self, request: GetTemplatesRequest, token: Optional[str] = None
@@ -301,7 +312,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        return [TemplateDetails(**template) for template in validate_response(result)]
+        responses = validate_response(result)
+        return [TemplateDetails(**template) for template in responses]
 
     async def get_export(
         self,
@@ -315,13 +327,21 @@ class AnytypeClient:
         result = await make_request(
             "POST",
             get_endpoint(
-                "getExport", space_id=space_id, object_id=object_id, format=format
+                "getExport",
+                space_id=space_id,
+                object_id=object_id,
+                format=str(format.value),
             ),
             str(self.base_url),
             headers=headers,
             token=self._get_token(token),
         )
-        return validate_response(result).get("content", "")
+        responses = validate_response(result)
+        if len(responses) > 0:
+            content = responses[0].get("content")
+            if isinstance(content, str):
+                return content
+        return ""
 
     def _get_headers(self) -> Dict[str, str]:
         """Get request headers with optional app name"""

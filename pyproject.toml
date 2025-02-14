@@ -26,7 +26,40 @@ dev = [
     "pytest-asyncio>=0.20.0",
     "pytest-cov>=4.0.0",
     "httpx>=0.23.0",
+    "mypy>=1.8.0",
+    "types-python-jose>=3.3.4",
+    "types-passlib>=1.7.7",
+    "types-python-multipart>=0.0.9",
 ]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_optional = true
+ignore_missing_imports = true
+explicit_package_bases = true
+namespace_packages = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+warn_untyped_fields = true
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.

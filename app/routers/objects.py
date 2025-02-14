@@ -1,12 +1,12 @@
 """Object management router"""
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from ..clients.anytype import AnytypeClient, get_anytype_client
-from ..helpers.api import APIError
-from ..helpers.schemas import (
+from app.clients.anytype import AnytypeClient, get_anytype_client
+from app.helpers.api import APIError
+from app.helpers.schemas import (
     BaseResponse,
     CreateObjectRequest,
     DeleteObjectRequest,
@@ -17,7 +17,7 @@ from ..helpers.schemas import (
     SearchRequest,
     SortOrder,
 )
-from ..main import get_validated_token
+from app.main import get_validated_token
 
 router = APIRouter(prefix="/object", tags=["objects"])
 
@@ -113,7 +113,7 @@ async def global_search(
         raise HTTPException(status_code=e.status_code, detail=str(e))
 
 
-@router.post("/export/{space_id}/{object_id}")
+@router.post("/export/{space_id}/{object_id}", response_model=Dict[str, str])
 async def get_export(
     space_id: str,
     object_id: str,
@@ -122,7 +122,7 @@ async def get_export(
     ),
     token: str = Depends(get_validated_token),
     client: AnytypeClient = Depends(get_anytype_client),
-) -> dict:
+) -> Dict[str, str]:
     """Export an object in the specified format"""
     try:
         content = await client.get_export(

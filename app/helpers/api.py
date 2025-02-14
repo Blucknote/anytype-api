@@ -2,9 +2,10 @@
 
 import json
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, TypedDict, Union
 
 import httpx
+from httpx import URL, Headers, QueryParams, Request, Response, Timeout
 
 from .constants import ENDPOINTS, OBJECT_URL_PATTERN
 
@@ -26,7 +27,7 @@ async def make_request(
     headers: Optional[Dict[str, str]] = None,
     params: Optional[Dict[str, Any]] = None,
     token: Optional[str] = None,
-) -> Any:
+) -> Dict[str, Any]:
     """Make an HTTP request to the Anytype API
 
     Args:
@@ -38,33 +39,34 @@ async def make_request(
         params: Query parameters
         token: Optional Bearer token for authentication
     """
-    if headers is None:
-        headers = {"Content-Type": "application/json"}
+    base_headers = {"Content-Type": "application/json"}
+    if headers:
+        base_headers.update(headers)
 
     # Use provided token or fall back to environment variable
     auth_token = token or os.getenv("ANYTYPE_APP_KEY")
     if auth_token:
         # Add token to headers for Bearer authentication
-        headers["Authorization"] = f"Bearer {auth_token}"
+        base_headers["Authorization"] = f"Bearer {auth_token}"
 
     try:
         async with httpx.AsyncClient() as client:
+            url = URL(f"{base_url}{endpoint}")
+            timeout = Timeout(30.0)
+            request_headers = Headers(base_headers)
+
             request_params = {
                 "method": method,
-                "url": f"{base_url}{endpoint}",
-                "headers": headers,
-                "timeout": 30.0,
+                "url": url,
+                "headers": request_headers,
+                "timeout": timeout,
             }
-
-            # Always include query parameters if provided
             if params:
                 request_params["params"] = params
-
-            # Always include body if provided (httpx will handle it appropriately)
             if data:
                 request_params["json"] = data
 
-            response = await client.request(**request_params)
+            response: Response = await client.request(**request_params)
 
             if response.status_code == 401:
                 raise APIError(
@@ -74,7 +76,10 @@ async def make_request(
             response.raise_for_status()
 
             try:
-                return response.json()
+                result = response.json()
+                if isinstance(result, dict):
+                    return result
+                return {"data": result}
             except json.JSONDecodeError:
                 if response.status_code == 204:
                     return {}
@@ -102,7 +107,7 @@ def construct_object_url(object_id: str, space_id: str) -> str:
 
 def validate_response(
     response: Union[Dict[str, Any], List[Dict[str, Any]], str],
-) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """Validate and process API response"""
     if not response:
         raise APIError("Empty response from API")
@@ -117,46 +122,38 @@ def validate_response(
     if isinstance(response, dict) and response.get("error"):
         raise APIError(response["error"])
 
-    # Ensure we always return a list of dictionaries
+    # Handle nested data structures
     if isinstance(response, dict):
-        if "types" in response:
-            types = response["types"]
-            if not isinstance(types, list):
-                types = [types]
-            return [t if isinstance(t, dict) else {"id": str(t)} for t in types]
         if "data" in response:
             data = response["data"]
-            if not isinstance(data, list):
-                data = [data]
-            return [d if isinstance(d, dict) else {"id": str(d)} for d in data]
-        if "spaces" in response:
-            spaces = response["spaces"]
-            if not isinstance(spaces, list):
-                spaces = [spaces]
-            return [s if isinstance(s, dict) else {"id": str(s)} for s in spaces]
-        if "members" in response:
-            members = response["members"]
-            if not isinstance(members, list):
-                members = [members]
-            return [m if isinstance(m, dict) else {"id": str(m)} for m in members]
-        if "templates" in response:
-            templates = response["templates"]
-            if not isinstance(templates, list):
-                templates = [templates]
-            return [t if isinstance(t, dict) else {"id": str(t)} for t in templates]
-        if "objects" in response:
-            objects = response["objects"]
-            if not isinstance(objects, list):
-                objects = [objects]
-            return [o if isinstance(o, dict) else {"id": str(o)} for o in objects]
-        # If no specific key found, convert the whole dict to a list
+            if isinstance(data, list):
+                return data
+            return [data]
         return [response]
-
-    if isinstance(response, list):
+    elif isinstance(response, list):
         return [r if isinstance(r, dict) else {"id": str(r)} for r in response]
+    else:
+        return [{"value": str(response)}]
 
-    # If we get here, convert whatever we have to a basic dict
-    return [{"id": str(response)}]
+
+class RequestData(TypedDict, total=False):
+    """Type for request data"""
+
+    space_id: str
+    object_id: str
+    type_id: str
+    token: str
+    app_name: str
+    code: str
+    challenge_id: str
+    limit: int
+    offset: int
+    sort: str
+    types: List[str]
+    include_system: bool
+    include_archived: bool
+    include_favorites: bool
+    query: str
 
 
 def prepare_request_data(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -164,7 +161,7 @@ def prepare_request_data(data: Dict[str, Any]) -> Dict[str, Any]:
     return {k: v for k, v in data.items() if v is not None}
 
 
-def get_endpoint(name: str, **kwargs) -> str:
+def get_endpoint(name: str, **kwargs: Any) -> str:
     """Get API endpoint by name with parameter substitution"""
     endpoint = ENDPOINTS.get(name)
     if not endpoint:

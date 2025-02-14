@@ -1,8 +1,9 @@
 """FastAPI backend for Anytype integration"""
 
 import logging
+from typing import Any, Dict, List, cast
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from fastapi.security.http import HTTPAuthorizationCredentials
@@ -70,14 +71,20 @@ async def get_validated_token(
 # Include routers
 from .routers import auth, objects, spaces, types
 
-app.include_router(auth.router)
-app.include_router(spaces.router)
-app.include_router(objects.router)
-app.include_router(types.router)
+# Include routers
+routers: List[APIRouter] = [
+    cast(APIRouter, auth.router),
+    cast(APIRouter, spaces.router),
+    cast(APIRouter, objects.router),
+    cast(APIRouter, types.router),
+]
+
+for router in routers:
+    app.include_router(router)
 
 
-@app.get("/")
-async def root():
+@app.get("/", response_model=Dict[str, str])
+async def root() -> Dict[str, str]:
     """Root endpoint"""
     return {"message": "Welcome to Anytype API"}
 
