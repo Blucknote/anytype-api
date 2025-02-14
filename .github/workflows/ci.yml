@@ -21,6 +21,7 @@ jobs:
       - name: Install and configure uv
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           uv venv
       
       - name: Get pip cache dir
@@ -42,17 +43,21 @@ jobs:
         run: |
           uv pip install --upgrade pip
           uv pip install -e .[dev]
-      
+
       - name: Type check with mypy
-        run: mypy app tests
+        run: |
+          source .venv/bin/activate
+          mypy app tests
       
       - name: Lint with ruff
         run: |
+          source .venv/bin/activate
           ruff check .
           ruff format --check .
       
       - name: Run tests with coverage
         run: |
+          source .venv/bin/activate
           pytest --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=80
       
       - name: Upload coverage reports
@@ -60,3 +65,4 @@ jobs:
         with:
           file: ./coverage.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
