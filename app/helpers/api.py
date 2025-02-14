@@ -170,7 +170,8 @@ def get_endpoint(name: str, **kwargs) -> str:
     if not endpoint:
         raise APIError(f"Unknown endpoint: {name}")
     try:
-        return endpoint.format(**kwargs) if kwargs else endpoint
+        formatted_endpoint = endpoint.format(**kwargs)
+        return formatted_endpoint
     except KeyError as e:
         raise APIError(f"Missing required parameter for endpoint {name}: {e}")
 

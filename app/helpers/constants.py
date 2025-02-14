@@ -23,7 +23,7 @@ ENDPOINTS = {
 }
 
 # Object URL patterns
-OBJECT_URL_PATTERN = "anytype://object?objectId={objectId}&spaceId={spaceId}"
+OBJECT_URL_PATTERN = "anytype://objects/{objectId}@space/{spaceId}"
 SPACE_URL_PATTERN = "anytype://space?spaceId={spaceId}"
 
 # View Types
