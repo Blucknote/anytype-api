@@ -61,6 +61,35 @@ pip install -r requirements.txt
   ANYTYPE_APP_KEY=your_app_key_here
   ```
 
+## Testing and Development
+
+### Running Tests
+```bash
+# Run all tests
+pytest
+
+# Run tests with coverage report
+pytest --cov=app
+
+# Run specific test file
+pytest tests/unit/helpers/test_api.py
+
+# Run tests in verbose mode
+pytest -v
+```
+
+### Code Quality
+```bash
+# Run linting and formatting checks
+ruff check .
+
+# Auto-fix linting issues
+ruff check --fix .
+
+# Format code
+ruff format .
+```
+
 ## Running the Application
 
 Development mode:
