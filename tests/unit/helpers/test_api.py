@@ -2,7 +2,7 @@
 
 import pytest
 import httpx
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from app.helpers.api import (
     make_request,
@@ -16,54 +16,76 @@ from app.helpers.constants import ENDPOINTS
 
 
 @pytest.mark.asyncio
-async def test_make_request_success(test_client: httpx.AsyncClient):
+async def test_make_request_success():
     """Test successful API request"""
     with patch.dict("os.environ", {"ANYTYPE_APP_KEY": "test_app_key"}):
         response_data = {"message": "Success"}
-        (test_client.get).return_value = httpx.Response(200, json=response_data)
-        result = await make_request(
-            "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
+        mock_request = httpx.Request("GET", "http://test")
+        mock_response = httpx.Response(
+            200,
+            json=response_data,
+            request=mock_request
         )
-        assert result == response_data
+        
+        with patch("httpx.AsyncClient.request", AsyncMock(return_value=mock_response)):
+            result = await make_request(
+                "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
+            )
+            assert result == response_data
 
 
 @pytest.mark.asyncio
-async def test_make_request_unauthorized(test_client: httpx.AsyncClient):
+async def test_make_request_unauthorized():
     """Test unauthorized API request"""
     with patch.dict("os.environ", {"ANYTYPE_APP_KEY": "test_app_key"}):
-        (test_client.get).return_value = httpx.Response(401, json={"message": "Unauthorized"})
-        with pytest.raises(APIError) as exc_info:
-            await make_request(
-                "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
-            )
-        assert exc_info.value.status_code == 401
-        assert "Unauthorized" in str(exc_info.value)
+        mock_request = httpx.Request("GET", "http://test")
+        mock_response = httpx.Response(
+            401,
+            json={"message": "Unauthorized"},
+            request=mock_request
+        )
+        
+        with patch("httpx.AsyncClient.request", AsyncMock(return_value=mock_response)):
+            with pytest.raises(APIError) as exc_info:
+                await make_request(
+                    "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
+                )
+            assert exc_info.value.status_code == 401
+            assert "Unauthorized" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
-async def test_make_request_timeout(test_client: httpx.AsyncClient):
+async def test_make_request_timeout():
     """Test API request timeout"""
     with patch.dict("os.environ", {"ANYTYPE_APP_KEY": "test_app_key"}):
-        (test_client.get).side_effect = httpx.ReadTimeout("Timeout")
-        with pytest.raises(APIError) as exc_info:
-            await make_request(
-                "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
-            )
-        assert exc_info.value.status_code == 504
-        assert "timed out" in str(exc_info.value)
+        with patch("httpx.AsyncClient.request", AsyncMock(side_effect=httpx.ReadTimeout("Timeout"))):
+            with pytest.raises(APIError) as exc_info:
+                await make_request(
+                    "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
+                )
+            assert exc_info.value.status_code == 504
+            assert "timed out" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
-async def test_make_request_http_error(test_client: httpx.AsyncClient):
+async def test_make_request_http_error():
     """Test HTTP error during API request"""
     with patch.dict("os.environ", {"ANYTYPE_APP_KEY": "test_app_key"}):
-        (test_client.get).side_effect = httpx.HTTPError("HTTP Error")
-        with pytest.raises(APIError) as exc_info:
-            await make_request(
-                "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
-            )
-        assert exc_info.value.status_code == 500
-        assert "HTTP Error" in str(exc_info.value)
+        mock_request = httpx.Request("GET", "http://test")
+        mock_response = httpx.Response(500, request=mock_request)
+        
+        class MockHTTPError(httpx.HTTPError):
+            def __init__(self):
+                self.response = mock_response
+                super().__init__("HTTP Error")
+        
+        with patch("httpx.AsyncClient.request", AsyncMock(side_effect=MockHTTPError())):
+            with pytest.raises(APIError) as exc_info:
+                await make_request(
+                    "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
+                )
+            assert exc_info.value.status_code == 500
+            assert "HTTP Error" in str(exc_info.value)
 
 
 def test_validate_response_success():

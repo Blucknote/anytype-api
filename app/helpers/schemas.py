@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ViewType(str, Enum):
@@ -54,6 +54,7 @@ class BaseResponse(BaseModel):
 
     success: bool = True
     error: Optional[str] = None
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class PaginationParams(BaseModel):
@@ -61,6 +62,7 @@ class PaginationParams(BaseModel):
 
     limit: Optional[int] = Field(default=50, ge=1, le=100)
     offset: Optional[int] = Field(default=0, ge=0)
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class ObjectDetails(BaseModel):
@@ -88,8 +90,7 @@ class ObjectDetails(BaseModel):
     relations: Optional[Dict[str, Any]] = None
     permissions: Optional[Dict[str, Any]] = None
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class TypeDetails(BaseModel):
@@ -102,8 +103,7 @@ class TypeDetails(BaseModel):
     is_system: bool = False
     fields: Optional[Dict[str, Any]] = None
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class TemplateDetails(BaseModel):
@@ -117,8 +117,7 @@ class TemplateDetails(BaseModel):
     snippet: Optional[str] = None
     is_system: bool = False
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class MemberDetails(BaseModel):
@@ -131,8 +130,7 @@ class MemberDetails(BaseModel):
     email: Optional[str] = None
     joined_date: Optional[datetime] = None
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class CreateObjectRequest(BaseModel):
@@ -153,8 +151,7 @@ class CreateObjectRequest(BaseModel):
     relations: Optional[Dict[str, Any]] = None
     is_draft: Optional[bool] = None
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class DeleteObjectRequest(BaseModel):
@@ -162,6 +159,8 @@ class DeleteObjectRequest(BaseModel):
 
     space_id: str
     object_id: str
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class SearchRequest(BaseModel):
@@ -177,8 +176,7 @@ class SearchRequest(BaseModel):
     include_archived: Optional[bool] = False
     include_favorites: Optional[bool] = None
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GlobalSearchRequest(BaseModel):
@@ -190,8 +188,7 @@ class GlobalSearchRequest(BaseModel):
     offset: Optional[int] = Field(default=0, ge=0)
     sort: Optional[SortOrder] = Field(default=SortOrder.LAST_MODIFIED_DATE)
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class CreateSpaceRequest(BaseModel):
@@ -200,6 +197,8 @@ class CreateSpaceRequest(BaseModel):
     name: str
     icon: Optional[str] = None
     description: Optional[str] = None
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class SpaceDetails(BaseModel):
@@ -215,8 +214,7 @@ class SpaceDetails(BaseModel):
     object_count: Optional[int] = None
     is_personal: bool = False
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class ExportRequest(BaseModel):
@@ -226,8 +224,7 @@ class ExportRequest(BaseModel):
     object_id: str
     format: ExportFormat = ExportFormat.MARKDOWN
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class DisplayCodeResponse(BaseModel):
@@ -236,11 +233,15 @@ class DisplayCodeResponse(BaseModel):
     code: str
     challenge_id: str
 
+    model_config = ConfigDict(populate_by_name=True)
+
 
 class TokenValidationRequest(BaseModel):
     """Token validation request model"""
 
     token: str
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GetObjectsRequest(BaseModel):
@@ -252,8 +253,7 @@ class GetObjectsRequest(BaseModel):
     offset: Optional[int] = Field(default=0, ge=0)
     sort: Optional[SortOrder] = Field(default=SortOrder.LAST_MODIFIED_DATE)
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GetMembersRequest(BaseModel):
@@ -263,8 +263,7 @@ class GetMembersRequest(BaseModel):
     limit: Optional[int] = Field(default=50, ge=1, le=100)
     offset: Optional[int] = Field(default=0, ge=0)
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GetTypesRequest(BaseModel):
@@ -273,8 +272,7 @@ class GetTypesRequest(BaseModel):
     space_id: Optional[str] = None
     include_system: Optional[bool] = True
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GetTemplatesRequest(BaseModel):
@@ -284,5 +282,4 @@ class GetTemplatesRequest(BaseModel):
     type_id: Optional[str] = None
     include_system: Optional[bool] = True
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(populate_by_name=True)
