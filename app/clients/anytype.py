@@ -2,8 +2,6 @@
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import Depends
-
 from ..core.config import settings
 from ..helpers.api import (
     APIError,
@@ -338,6 +336,6 @@ class AnytypeClient:
 
 
 # FastAPI dependency
-async def get_anytype_client() -> AnytypeClient:
+def get_anytype_client() -> AnytypeClient:
     """Dependency for getting AnytypeClient instance"""
     return AnytypeClient()

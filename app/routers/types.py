@@ -19,7 +19,7 @@ router = APIRouter(tags=["types"])
 
 @router.get("/type/list", response_model=List[TypeDetails])
 async def get_types(
-    request: GetTypesRequest = Depends(),
+    request: GetTypesRequest,
     token: str = Depends(get_validated_token),
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> List[TypeDetails]:
@@ -27,12 +27,12 @@ async def get_types(
     try:
         return await client.get_types(request, token=token)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.get("/template/list", response_model=List[TemplateDetails])
 async def get_templates(
-    request: GetTemplatesRequest = Depends(),
+    request: GetTemplatesRequest,
     token: str = Depends(get_validated_token),
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> List[TemplateDetails]:
@@ -40,4 +40,4 @@ async def get_templates(
     try:
         return await client.get_templates(request, token=token)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e

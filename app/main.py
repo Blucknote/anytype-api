@@ -4,11 +4,8 @@ import logging
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import (
-    HTTPBearer,
-    OAuth2AuthorizationCodeBearer,
-    OAuth2PasswordBearer,
-)
+from fastapi.security import HTTPBearer
+from fastapi.security.http import HTTPAuthorizationCredentials
 
 from .clients.anytype import AnytypeClient, get_anytype_client
 from .core.config import Settings
@@ -48,7 +45,7 @@ oauth2_scheme = HTTPBearer(
 
 
 async def get_validated_token(
-    credentials=Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Depends(oauth2_scheme),
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> str:
     """Validate the bearer token and return it if valid"""
@@ -67,7 +64,7 @@ async def get_validated_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from e
 
 
 # Include routers

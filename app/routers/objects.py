@@ -32,7 +32,7 @@ async def create_object(
     try:
         return await client.create_object(request, token=token)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.get("/get/{space_id}/{object_id}", response_model=ObjectDetails)
@@ -46,7 +46,7 @@ async def get_object(
     try:
         return await client.get_object(space_id, object_id, token=token)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.get("/list", response_model=List[ObjectDetails])
@@ -71,7 +71,7 @@ async def get_objects(
         )
         return await client.get_objects(request, token=token)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.post("/delete", response_model=BaseResponse)
@@ -84,7 +84,7 @@ async def delete_object(
     try:
         return await client.delete_object(request, token=token)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.post("/search", response_model=List[ObjectDetails])
@@ -97,7 +97,7 @@ async def search_objects(
     try:
         return await client.search_objects(request, token=token)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.post("/search/global", response_model=List[ObjectDetails])
@@ -117,13 +117,17 @@ async def global_search(
 async def get_export(
     space_id: str,
     object_id: str,
-    format: ExportFormat = Query(ExportFormat.MARKDOWN, description="Export format"),
+    export_format: ExportFormat = Query(
+        ExportFormat.MARKDOWN, description="Export format"
+    ),
     token: str = Depends(get_validated_token),
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> dict:
     """Export an object in the specified format"""
     try:
-        content = await client.get_export(space_id, object_id, format, token=token)
+        content = await client.get_export(
+            space_id, object_id, export_format, token=token
+        )
         return {"content": content}
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e

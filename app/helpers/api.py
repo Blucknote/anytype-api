@@ -5,7 +5,6 @@ import os
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
-from fastapi import HTTPException
 
 from .constants import ENDPOINTS, OBJECT_URL_PATTERN
 
@@ -79,10 +78,10 @@ async def make_request(
             except json.JSONDecodeError:
                 if response.status_code == 204:
                     return {}
-                raise APIError("Invalid JSON response from API", 500)
+                raise APIError("Invalid JSON response from API", 500) from None
 
     except (httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout):
-        raise APIError("Request timed out. Please try again.", 504)
+        raise APIError("Request timed out. Please try again.", 504) from None
     except httpx.HTTPError as e:
         status_code = e.response.status_code if hasattr(e, "response") else 500
         error_msg = str(e)
@@ -93,7 +92,7 @@ async def make_request(
                     error_msg = error_data.get("error", error_msg)
             except json.JSONDecodeError:
                 pass
-        raise APIError(error_msg, status_code)
+        raise APIError(error_msg, status_code) from None
 
 
 def construct_object_url(object_id: str, space_id: str) -> str:
@@ -113,7 +112,7 @@ def validate_response(
         try:
             response = json.loads(response)
         except json.JSONDecodeError:
-            raise APIError("Invalid JSON string response")
+            raise APIError("Invalid JSON string response") from None
 
     if isinstance(response, dict) and response.get("error"):
         raise APIError(response["error"])
@@ -174,7 +173,7 @@ def get_endpoint(name: str, **kwargs) -> str:
         formatted_endpoint = endpoint.format(**kwargs)
         return formatted_endpoint
     except KeyError as e:
-        raise APIError(f"Missing required parameter for endpoint {name}: {e}")
+        raise APIError(f"Missing required parameter for endpoint {name}: {e}") from e
 
 
 async def get_auth_display_code(

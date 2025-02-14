@@ -6,7 +6,6 @@ from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
-from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

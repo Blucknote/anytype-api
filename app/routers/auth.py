@@ -3,12 +3,12 @@
 from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Security
-from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.security.http import HTTPAuthorizationCredentials
 
 from ..clients.anytype import AnytypeClient, get_anytype_client
 from ..helpers.api import APIError
-from ..helpers.schemas import DisplayCodeResponse, TokenValidationRequest
-from ..main import get_validated_token, oauth2_scheme
+from ..helpers.schemas import DisplayCodeResponse
+from ..main import oauth2_scheme
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -22,7 +22,7 @@ async def get_auth_display_code(
     try:
         return await client.get_auth_display_code(app_name)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.post("/token")
@@ -35,12 +35,12 @@ async def get_token(
     try:
         return await client.get_token(code, challenge_id)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.post("/validate")
 async def validate_token(
-    credentials: HTTPAuthorizationCredentials = Security(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Depends(oauth2_scheme),
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> Dict[str, bool]:
     """Validate authentication token"""
@@ -48,4 +48,4 @@ async def validate_token(
         valid = await client.validate_token(credentials.credentials)
         return {"valid": valid}
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e

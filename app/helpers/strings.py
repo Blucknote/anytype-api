@@ -1,7 +1,7 @@
 """String manipulation and formatting utilities"""
 
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 def pluralize(count: int, singular: str, plural: Optional[str] = None) -> str:
@@ -32,7 +32,7 @@ def format_snippet(text: str, max_length: int = 150) -> str:
     if not text:
         return ""
     text = re.sub(r"\s+", " ", text.strip())
-    if len_text := len(text) <= max_length:
+    if len(text) <= max_length:
         return text
     return text[:max_length].rsplit(" ", 1)[0] + "..."
 

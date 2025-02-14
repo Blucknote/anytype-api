@@ -5,7 +5,6 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..clients.anytype import AnytypeClient, get_anytype_client
-from ..core.config import settings
 from ..helpers.api import APIError
 from ..helpers.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from ..helpers.schemas import (
@@ -29,7 +28,7 @@ async def create_space(
     try:
         return await client.create_space(request, token=token)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.get("/list", response_model=List[SpaceDetails])
@@ -43,12 +42,12 @@ async def get_spaces(
     try:
         return await client.get_spaces(limit, offset, token=token)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
 @router.get("/members", response_model=List[MemberDetails])
 async def get_members(
-    request: GetMembersRequest = Depends(),
+    request: GetMembersRequest,
     token: str = Depends(get_validated_token),
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> List[MemberDetails]:
@@ -56,4 +55,4 @@ async def get_members(
     try:
         return await client.get_members(request, token=token)
     except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e))
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
