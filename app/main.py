@@ -1,10 +1,12 @@
 """FastAPI backend for Anytype integration"""
 
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2AuthorizationCodeBearer, HTTPBearer
 
 from .core.config import Settings
+from .clients.anytype import AnytypeClient, get_anytype_client
 
 # Configure logging
 logging.basicConfig(
@@ -15,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize settings
-settings = Settings()
+settings = Settings(_env_file=".env")
 
 # Create FastAPI application
 app = FastAPI(
@@ -32,6 +34,37 @@ app.add_middleware(
     allow_methods=settings.cors_allow_methods,
     allow_headers=settings.cors_allow_headers,
 )
+
+
+# Security scheme
+oauth2_scheme = HTTPBearer(
+    scheme_name="Bearer",
+    description="Bearer token authentication",
+    auto_error=True
+)
+
+async def get_validated_token(
+    credentials = Depends(oauth2_scheme),
+    client: AnytypeClient = Depends(get_anytype_client)
+) -> str:
+    """Validate the bearer token and return it if valid"""
+    token = credentials.credentials
+    try:
+        is_valid = await client.validate_token(token)
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return token
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
 
 # Include routers
 from .routers import auth, objects, spaces, types

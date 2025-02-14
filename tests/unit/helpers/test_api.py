@@ -27,11 +27,68 @@ async def test_make_request_success():
             request=mock_request
         )
         
-        with patch("httpx.AsyncClient.request", AsyncMock(return_value=mock_response)):
+        with patch("httpx.AsyncClient.request", AsyncMock(return_value=mock_response)) as mock_request:
             result = await make_request(
                 "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
             )
             assert result == response_data
+            # Verify token is in both header and query params
+            call_kwargs = mock_request.call_args.kwargs
+            assert call_kwargs["headers"]["Authorization"] == "Bearer test_app_key"
+            assert call_kwargs["params"]["token"] == "test_app_key"
+
+
+@pytest.mark.asyncio
+async def test_make_request_with_provided_token():
+    """Test request with explicitly provided token"""
+    response_data = {"message": "Success"}
+    mock_request = httpx.Request("GET", "http://test")
+    mock_response = httpx.Response(
+        200,
+        json=response_data,
+        request=mock_request
+    )
+    
+    with patch("httpx.AsyncClient.request", AsyncMock(return_value=mock_response)) as mock_request:
+        result = await make_request(
+            "GET",
+            "/test",
+            "http://test",
+            headers={"Content-Type": "application/json"},
+            token="provided_token"
+        )
+        assert result == response_data
+        # Verify provided token is used in both header and query params
+        call_kwargs = mock_request.call_args.kwargs
+        assert call_kwargs["headers"]["Authorization"] == "Bearer provided_token"
+        assert call_kwargs["params"]["token"] == "provided_token"
+
+
+@pytest.mark.asyncio
+async def test_make_request_with_existing_params():
+    """Test request with existing query parameters"""
+    with patch.dict("os.environ", {"ANYTYPE_APP_KEY": "test_app_key"}):
+        response_data = {"message": "Success"}
+        mock_request = httpx.Request("GET", "http://test")
+        mock_response = httpx.Response(
+            200,
+            json=response_data,
+            request=mock_request
+        )
+        
+        with patch("httpx.AsyncClient.request", AsyncMock(return_value=mock_response)) as mock_request:
+            result = await make_request(
+                "GET",
+                "/test",
+                "http://test",
+                headers={"Content-Type": "application/json"},
+                params={"existing": "param"}
+            )
+            assert result == response_data
+            # Verify token is added to existing params
+            call_kwargs = mock_request.call_args.kwargs
+            assert call_kwargs["params"]["token"] == "test_app_key"
+            assert call_kwargs["params"]["existing"] == "param"
 
 
 @pytest.mark.asyncio

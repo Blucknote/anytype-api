@@ -1,11 +1,13 @@
 """Authentication router"""
 
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Dict, Optional
+from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi.security import HTTPAuthorizationCredentials
 
 from ..clients.anytype import AnytypeClient, get_anytype_client
 from ..helpers.api import APIError
 from ..helpers.schemas import DisplayCodeResponse, TokenValidationRequest
+from ..main import get_validated_token, oauth2_scheme
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -37,12 +39,12 @@ async def get_token(
 
 @router.post("/validate")
 async def validate_token(
-    request: TokenValidationRequest,
+    credentials: HTTPAuthorizationCredentials = Security(oauth2_scheme),
     client: AnytypeClient = Depends(get_anytype_client),
-):
+) -> Dict[str, bool]:
     """Validate authentication token"""
     try:
-        valid = await client.validate_token(request.token)
+        valid = await client.validate_token(credentials.credentials)
         return {"valid": valid}
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e))
