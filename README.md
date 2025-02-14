@@ -48,9 +48,11 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+3. Install dependencies using uv:
 ```bash
-pip install -r requirements.txt
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv
+uv pip install -e .[dev]
 ```
 
 4. Configure environment variables:
@@ -117,16 +119,33 @@ pytest -v
 ```
 
 ### Code Quality
+
+The project uses [ruff](https://astral.sh/ruff) for linting and formatting:
+
 ```bash
-# Run linting and formatting checks
+# Run linting checks
 ruff check .
 
 # Auto-fix linting issues
 ruff check --fix .
 
+# Run formatting checks
+ruff format --check .
+
 # Format code
 ruff format .
 ```
+
+### Continuous Integration
+
+The project uses GitHub Actions for continuous integration. The CI pipeline:
+- Runs on every push to main and pull requests
+- Uses Python 3.8
+- Installs dependencies using uv
+- Runs ruff for linting and formatting checks
+- Runs pytest with coverage reporting (minimum 80% coverage required)
+
+You can see the workflow status in the GitHub Actions tab of the repository.
 
 ## Running the Application
 
