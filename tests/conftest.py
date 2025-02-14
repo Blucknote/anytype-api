@@ -1,4 +1,5 @@
 """Pytest configuration and fixtures"""
+
 import os
 import sys
 from typing import AsyncGenerator
@@ -10,9 +11,9 @@ from httpx import AsyncClient
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from app.clients.anytype import AnytypeClient
 from app.core.config import Settings, get_settings
 from app.main import app
-from app.clients.anytype import AnytypeClient
 
 
 @pytest.fixture(scope="session")
@@ -24,7 +25,9 @@ def anyio_backend():
 def test_settings() -> Settings:
     """Create test settings with environment variables from .env.test"""
     # Override the env_file in model_config for testing
-    Settings.model_config["env_file"] = os.path.join(os.path.dirname(__file__), ".env.test")
+    Settings.model_config["env_file"] = os.path.join(
+        os.path.dirname(__file__), ".env.test"
+    )
     return get_settings()
 
 

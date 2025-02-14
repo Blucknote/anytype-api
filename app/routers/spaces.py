@@ -1,19 +1,20 @@
 """Space management router"""
 
 from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..clients.anytype import AnytypeClient, get_anytype_client
 from ..core.config import settings
 from ..helpers.api import APIError
 from ..helpers.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
-from ..main import get_validated_token
 from ..helpers.schemas import (
     CreateSpaceRequest,
     GetMembersRequest,
     MemberDetails,
     SpaceDetails,
 )
+from ..main import get_validated_token
 
 router = APIRouter(prefix="/space", tags=["spaces"])
 

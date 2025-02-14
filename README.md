@@ -6,6 +6,7 @@ A FastAPI-based backend service for interacting with Anytype. This is a Python p
 
 - **Authentication**
   - Display code-based authentication
+  - Bearer token authentication
   - Token validation and management
   - Session token handling
 - **Spaces Management**
@@ -61,6 +62,43 @@ pip install -r requirements.txt
   ANYTYPE_APP_KEY=your_app_key_here
   ```
 
+## Authentication
+
+The API uses Bearer token authentication. To use protected endpoints:
+
+1. Get a display code:
+```bash
+curl -X POST http://localhost:8000/auth/display-code
+```
+
+2. Use the display code to get a token:
+```bash
+curl -X POST http://localhost:8000/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"code": "your-display-code"}'
+```
+
+3. Use the token in subsequent requests:
+```bash
+curl -X GET http://localhost:8000/space/list \
+  -H "Authorization: Bearer your-token-here"
+```
+
+All protected endpoints require the `Authorization` header with a valid bearer token. The token can be:
+- Obtained through the authentication flow
+- Validated using the `/auth/validate` endpoint
+- Used for all subsequent requests to protected endpoints
+
+Authentication endpoints:
+- `/auth/display-code` (Public) - Get a display code
+- `/auth/token` (Public) - Exchange display code for token
+- `/auth/validate` (Protected) - Validate token
+
+Protected endpoints include:
+- All `/space/*` endpoints
+- All `/object/*` endpoints
+- All `/type/*` endpoints
+
 ## Testing and Development
 
 ### Running Tests
@@ -111,9 +149,9 @@ Once the application is running, you can access:
 ## API Endpoints
 
 ### Authentication
-- `POST /auth/display-code` - Get display code for authentication
-- `POST /auth/token` - Get authentication token from display code
-- `GET /auth/validate` - Validate authentication token
+- `POST /auth/display-code` - Get display code for authentication (Public)
+- `POST /auth/token` - Get authentication token from display code (Public)
+- `POST /auth/validate` - Validate authentication token (Protected)
 
 ### Spaces
 - `POST /space/create` - Create a new space
@@ -170,7 +208,8 @@ anytype-api/
 
 ### API Client
 The `AnytypeClient` class handles all communication with the Anytype API, including:
-- Authentication and token management
+- Bearer token authentication
+- Token validation and management
 - Request preparation and validation
 - Error handling and response parsing
 - Rate limiting and session management

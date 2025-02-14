@@ -1,16 +1,17 @@
 """Tests for API helper functions"""
 
-import pytest
-import httpx
 from unittest.mock import AsyncMock, patch
 
+import httpx
+import pytest
+
 from app.helpers.api import (
-    make_request,
-    validate_response,
-    prepare_request_data,
-    get_endpoint,
-    construct_object_url,
     APIError,
+    construct_object_url,
+    get_endpoint,
+    make_request,
+    prepare_request_data,
+    validate_response,
 )
 from app.helpers.constants import ENDPOINTS
 
@@ -21,21 +22,24 @@ async def test_make_request_success():
     with patch.dict("os.environ", {"ANYTYPE_APP_KEY": "test_app_key"}):
         response_data = {"message": "Success"}
         mock_request = httpx.Request("GET", "http://test")
-        mock_response = httpx.Response(
-            200,
-            json=response_data,
-            request=mock_request
-        )
-        
-        with patch("httpx.AsyncClient.request", AsyncMock(return_value=mock_response)) as mock_request:
+        mock_response = httpx.Response(200, json=response_data, request=mock_request)
+
+        with patch(
+            "httpx.AsyncClient.request", AsyncMock(return_value=mock_response)
+        ) as mock_request:
             result = await make_request(
-                "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
+                "GET",
+                "/test",
+                "http://test",
+                headers={"Content-Type": "application/json"},
             )
             assert result == response_data
-            # Verify token is in both header and query params
+            # Verify token is in header
             call_kwargs = mock_request.call_args.kwargs
             assert call_kwargs["headers"]["Authorization"] == "Bearer test_app_key"
-            assert call_kwargs["params"]["token"] == "test_app_key"
+            assert "params" not in call_kwargs or "token" not in call_kwargs.get(
+                "params", {}
+            )
 
 
 @pytest.mark.asyncio
@@ -43,25 +47,25 @@ async def test_make_request_with_provided_token():
     """Test request with explicitly provided token"""
     response_data = {"message": "Success"}
     mock_request = httpx.Request("GET", "http://test")
-    mock_response = httpx.Response(
-        200,
-        json=response_data,
-        request=mock_request
-    )
-    
-    with patch("httpx.AsyncClient.request", AsyncMock(return_value=mock_response)) as mock_request:
+    mock_response = httpx.Response(200, json=response_data, request=mock_request)
+
+    with patch(
+        "httpx.AsyncClient.request", AsyncMock(return_value=mock_response)
+    ) as mock_request:
         result = await make_request(
             "GET",
             "/test",
             "http://test",
             headers={"Content-Type": "application/json"},
-            token="provided_token"
+            token="provided_token",
         )
         assert result == response_data
-        # Verify provided token is used in both header and query params
+        # Verify provided token is used in header
         call_kwargs = mock_request.call_args.kwargs
         assert call_kwargs["headers"]["Authorization"] == "Bearer provided_token"
-        assert call_kwargs["params"]["token"] == "provided_token"
+        assert "params" not in call_kwargs or "token" not in call_kwargs.get(
+            "params", {}
+        )
 
 
 @pytest.mark.asyncio
@@ -70,25 +74,24 @@ async def test_make_request_with_existing_params():
     with patch.dict("os.environ", {"ANYTYPE_APP_KEY": "test_app_key"}):
         response_data = {"message": "Success"}
         mock_request = httpx.Request("GET", "http://test")
-        mock_response = httpx.Response(
-            200,
-            json=response_data,
-            request=mock_request
-        )
-        
-        with patch("httpx.AsyncClient.request", AsyncMock(return_value=mock_response)) as mock_request:
+        mock_response = httpx.Response(200, json=response_data, request=mock_request)
+
+        with patch(
+            "httpx.AsyncClient.request", AsyncMock(return_value=mock_response)
+        ) as mock_request:
             result = await make_request(
                 "GET",
                 "/test",
                 "http://test",
                 headers={"Content-Type": "application/json"},
-                params={"existing": "param"}
+                params={"existing": "param"},
             )
             assert result == response_data
-            # Verify token is added to existing params
+            # Verify token is in header and existing params are preserved
             call_kwargs = mock_request.call_args.kwargs
-            assert call_kwargs["params"]["token"] == "test_app_key"
+            assert call_kwargs["headers"]["Authorization"] == "Bearer test_app_key"
             assert call_kwargs["params"]["existing"] == "param"
+            assert "token" not in call_kwargs["params"]
 
 
 @pytest.mark.asyncio
@@ -97,15 +100,16 @@ async def test_make_request_unauthorized():
     with patch.dict("os.environ", {"ANYTYPE_APP_KEY": "test_app_key"}):
         mock_request = httpx.Request("GET", "http://test")
         mock_response = httpx.Response(
-            401,
-            json={"message": "Unauthorized"},
-            request=mock_request
+            401, json={"message": "Unauthorized"}, request=mock_request
         )
-        
+
         with patch("httpx.AsyncClient.request", AsyncMock(return_value=mock_response)):
             with pytest.raises(APIError) as exc_info:
                 await make_request(
-                    "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
+                    "GET",
+                    "/test",
+                    "http://test",
+                    headers={"Content-Type": "application/json"},
                 )
             assert exc_info.value.status_code == 401
             assert "Unauthorized" in str(exc_info.value)
@@ -115,10 +119,16 @@ async def test_make_request_unauthorized():
 async def test_make_request_timeout():
     """Test API request timeout"""
     with patch.dict("os.environ", {"ANYTYPE_APP_KEY": "test_app_key"}):
-        with patch("httpx.AsyncClient.request", AsyncMock(side_effect=httpx.ReadTimeout("Timeout"))):
+        with patch(
+            "httpx.AsyncClient.request",
+            AsyncMock(side_effect=httpx.ReadTimeout("Timeout")),
+        ):
             with pytest.raises(APIError) as exc_info:
                 await make_request(
-                    "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
+                    "GET",
+                    "/test",
+                    "http://test",
+                    headers={"Content-Type": "application/json"},
                 )
             assert exc_info.value.status_code == 504
             assert "timed out" in str(exc_info.value)
@@ -130,16 +140,19 @@ async def test_make_request_http_error():
     with patch.dict("os.environ", {"ANYTYPE_APP_KEY": "test_app_key"}):
         mock_request = httpx.Request("GET", "http://test")
         mock_response = httpx.Response(500, request=mock_request)
-        
+
         class MockHTTPError(httpx.HTTPError):
             def __init__(self):
                 self.response = mock_response
                 super().__init__("HTTP Error")
-        
+
         with patch("httpx.AsyncClient.request", AsyncMock(side_effect=MockHTTPError())):
             with pytest.raises(APIError) as exc_info:
                 await make_request(
-                    "GET", "/test", "http://test", headers={"Content-Type": "application/json"}
+                    "GET",
+                    "/test",
+                    "http://test",
+                    headers={"Content-Type": "application/json"},
                 )
             assert exc_info.value.status_code == 500
             assert "HTTP Error" in str(exc_info.value)

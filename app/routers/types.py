@@ -1,17 +1,18 @@
 """Type and template management router"""
 
 from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..clients.anytype import AnytypeClient, get_anytype_client
 from ..helpers.api import APIError
-from ..main import get_validated_token
 from ..helpers.schemas import (
     GetTemplatesRequest,
     GetTypesRequest,
     TemplateDetails,
     TypeDetails,
 )
+from ..main import get_validated_token
 
 router = APIRouter(tags=["types"])
 

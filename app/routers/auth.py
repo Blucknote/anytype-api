@@ -1,6 +1,7 @@
 """Authentication router"""
 
 from typing import Dict, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials
 

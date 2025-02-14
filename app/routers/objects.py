@@ -1,11 +1,11 @@
 """Object management router"""
 
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..clients.anytype import AnytypeClient, get_anytype_client
 from ..helpers.api import APIError
-from ..main import get_validated_token
 from ..helpers.schemas import (
     BaseResponse,
     CreateObjectRequest,
@@ -17,6 +17,7 @@ from ..helpers.schemas import (
     SearchRequest,
     SortOrder,
 )
+from ..main import get_validated_token
 
 router = APIRouter(prefix="/object", tags=["objects"])
 
