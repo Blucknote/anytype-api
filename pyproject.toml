@@ -29,7 +29,6 @@ dev = [
     "mypy>=1.8.0",
     "types-python-jose>=3.3.4",
     "types-passlib>=1.7.7",
-    "types-python-multipart>=0.0.9",
 ]
 
 [tool.mypy]

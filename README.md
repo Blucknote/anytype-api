@@ -50,8 +50,12 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 3. Install dependencies using uv:
 ```bash
+# Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create virtual environment and install dependencies
 uv venv
+uv pip install --upgrade pip
 uv pip install -e .[dev]
 ```
 
@@ -118,10 +122,18 @@ pytest tests/unit/helpers/test_api.py
 pytest -v
 ```
 
-### Code Quality
+### Development Tools
 
-The project uses [ruff](https://astral.sh/ruff) for linting and formatting:
+The project uses several tools to ensure code quality:
 
+#### Type Checking
+```bash
+# Run type checks
+mypy app tests
+```
+
+#### Linting and Formatting
+The project uses [ruff](https://astral.sh/ruff) for both linting and formatting:
 ```bash
 # Run linting checks
 ruff check .
@@ -140,12 +152,13 @@ ruff format .
 
 The project uses GitHub Actions for continuous integration. The CI pipeline:
 - Runs on every push to main and pull requests
-- Uses Python 3.8
-- Installs dependencies using uv
-- Runs ruff for linting and formatting checks
-- Runs pytest with coverage reporting (minimum 80% coverage required)
+- Uses Python 3.8 with uv for fast, reliable dependency management
+- Performs type checking with mypy
+- Runs ruff for linting and formatting verification
+- Executes tests with pytest and enforces 80% code coverage
+- Uploads coverage reports to Codecov for tracking
 
-You can see the workflow status in the GitHub Actions tab of the repository.
+You can see the workflow status in the GitHub Actions tab and coverage reports in Codecov.
 
 ## Running the Application
 

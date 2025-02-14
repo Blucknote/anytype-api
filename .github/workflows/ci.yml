@@ -16,27 +16,47 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.8"
+          cache: "pip"
       
-      - name: Install uv
+      - name: Install and configure uv
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          
+          uv venv
+      
+      - name: Get pip cache dir
+        id: pip-cache
+        run: |
+          echo "dir=$(uv cache dir)" >> $GITHUB_OUTPUT
+      
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
-          path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('pyproject.toml') }}
-          
+          path: |
+            ${{ steps.pip-cache.outputs.dir }}
+            .venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+      
       - name: Install dependencies
         run: |
-          uv venv
+          uv pip install --upgrade pip
           uv pip install -e .[dev]
-          
+      
+      - name: Type check with mypy
+        run: mypy app tests
+      
       - name: Lint with ruff
         run: |
           ruff check .
           ruff format --check .
-          
-      - name: Run tests
+      
+      - name: Run tests with coverage
         run: |
-          pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+          pytest --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=80
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true
