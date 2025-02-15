@@ -269,17 +269,10 @@ class GetMembersRequest(BaseModel):
 class GetTypesRequest(BaseModel):
     """Get types request model"""
 
-    space_id: Optional[str] = None
-    include_system: Optional[bool] = True
-
     model_config = ConfigDict(populate_by_name=True)
 
 
 class GetTemplatesRequest(BaseModel):
     """Get templates request model"""
-
-    space_id: Optional[str] = None
-    type_id: Optional[str] = None
-    include_system: Optional[bool] = True
 
     model_config = ConfigDict(populate_by_name=True)

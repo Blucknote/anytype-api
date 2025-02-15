@@ -279,17 +279,21 @@ class AnytypeClient:
         return [ObjectDetails(**obj) for obj in responses]
 
     async def get_types(
-        self, request: GetTypesRequest, token: Optional[str] = None
+        self,
+        space_id: Optional[str] = None,
+        include_system: Optional[bool] = True,
+        token: Optional[str] = None,
     ) -> List[TypeDetails]:
         """Get object types"""
-        data = prepare_request_data(request.dict())
-        space_id = data.pop("space_id")
         headers = self._get_headers()
+        params = {"include_system": include_system}
+        if space_id:
+            params["space_id"] = space_id
         result = await make_request(
             "GET",
             get_endpoint("getTypes", space_id=space_id),
             str(self.base_url),
-            params=data,
+            params=params,
             headers=headers,
             token=self._get_token(token),
         )
@@ -297,18 +301,24 @@ class AnytypeClient:
         return [TypeDetails(**type_) for type_ in responses]
 
     async def get_templates(
-        self, request: GetTemplatesRequest, token: Optional[str] = None
+        self,
+        space_id: Optional[str] = None,
+        type_id: Optional[str] = None,
+        include_system: Optional[bool] = True,
+        token: Optional[str] = None,
     ) -> List[TemplateDetails]:
         """Get templates"""
-        data = prepare_request_data(request.dict())
-        space_id = data.pop("space_id")
-        type_id = data.pop("type_id")
         headers = self._get_headers()
+        params = {"include_system": include_system}
+        if space_id:
+            params["space_id"] = space_id
+        if type_id:
+            params["type_id"] = type_id
         result = await make_request(
             "GET",
             get_endpoint("getTemplates", space_id=space_id, type_id=type_id),
             str(self.base_url),
-            params=data,
+            params=params,
             headers=headers,
             token=self._get_token(token),
         )
