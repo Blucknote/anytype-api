@@ -1,7 +1,7 @@
 """Configuration management using Pydantic settings"""
 
 from functools import lru_cache
-from typing import List
+from typing import Dict, List
 
 from pydantic import AnyHttpUrl, Field, HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,6 +25,17 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = True
     cors_allow_methods: List[str] = ["*"]
     cors_allow_headers: List[str] = ["*"]
+
+    # Logging Configuration
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    log_format: str = Field(
+        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        alias="LOG_FORMAT",
+    )
+    log_file: str | None = Field(default=None, alias="LOG_FILE")
+    log_rotation: str = Field(default="1 day", alias="LOG_ROTATION")
+    log_retention: str = Field(default="7 days", alias="LOG_RETENTION")
+    log_compression: str = Field(default="zip", alias="LOG_COMPRESSION")
 
     model_config = SettingsConfigDict(
         env_file=".env",

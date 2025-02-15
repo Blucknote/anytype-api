@@ -1,13 +1,17 @@
 """API helper functions and utilities"""
 
 import json
+import logging
 import os
+import time
 from typing import Any, Dict, List, Optional, TypedDict, Union
 
 import httpx
 from httpx import URL, Headers, QueryParams, Request, Response, Timeout
 
 from .constants import ENDPOINTS, OBJECT_URL_PATTERN
+
+logger = logging.getLogger(__name__)
 
 
 class APIError(Exception):
@@ -49,6 +53,25 @@ async def make_request(
         # Add token to headers for Bearer authentication
         base_headers["Authorization"] = f"Bearer {auth_token}"
 
+    start_time = time.time()
+    logger.info(
+        "Making API request: %s %s",
+        method,
+        endpoint,
+        extra={
+            "method": method,
+            "endpoint": endpoint,
+            "params": params,
+            "has_data": bool(data),
+        },
+    )
+    logger.debug(
+        "Request details - Headers: %s, Data: %s, Params: %s",
+        base_headers,
+        data,
+        params,
+    )
+
     try:
         async with httpx.AsyncClient() as client:
             url = URL(f"{base_url}{endpoint}")
@@ -67,25 +90,57 @@ async def make_request(
                 request_params["json"] = data
 
             response: Response = await client.request(**request_params)
+            duration = time.time() - start_time
 
             if response.status_code == 401:
+                logger.warning(
+                    "Unauthorized API request: %s %s",
+                    method,
+                    endpoint,
+                    extra={"status_code": 401},
+                )
                 raise APIError(
                     "Unauthorized. Please check your authentication token.", 401
                 )
 
             response.raise_for_status()
+            logger.info(
+                "API request completed: %s %s - %d (%.2fs)",
+                method,
+                endpoint,
+                response.status_code,
+                duration,
+                extra={
+                    "status_code": response.status_code,
+                    "duration": duration,
+                },
+            )
 
             try:
                 result = response.json()
+                logger.debug("API response data: %s", result)
                 if isinstance(result, dict):
                     return result
                 return {"data": result}
             except json.JSONDecodeError:
                 if response.status_code == 204:
+                    logger.debug("Empty response (204 No Content)")
                     return {}
+                logger.error(
+                    "Invalid JSON response from API: %s",
+                    response.text[:200],
+                    extra={"response_text": response.text},
+                )
                 raise APIError("Invalid JSON response from API", 500) from None
 
     except (httpx.ReadTimeout, httpx.ConnectTimeout, httpx.WriteTimeout):
+        logger.error(
+            "API request timed out: %s %s (%.2fs)",
+            method,
+            endpoint,
+            time.time() - start_time,
+            extra={"timeout_type": "request"},
+        )
         raise APIError("Request timed out. Please try again.", 504) from None
     except httpx.HTTPError as e:
         status_code = e.response.status_code if hasattr(e, "response") else 500
@@ -97,6 +152,18 @@ async def make_request(
                     error_msg = error_data.get("error", error_msg)
             except json.JSONDecodeError:
                 pass
+        logger.error(
+            "API request failed: %s %s - %s (%.2fs)",
+            method,
+            endpoint,
+            error_msg,
+            time.time() - start_time,
+            extra={
+                "error": error_msg,
+                "status_code": status_code,
+            },
+            exc_info=True,
+        )
         raise APIError(error_msg, status_code) from None
 
 
@@ -109,18 +176,28 @@ def validate_response(
     response: Union[Dict[str, Any], List[Dict[str, Any]], str],
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """Validate and process API response"""
+    logger.debug("Validating API response: %s", response)
     if not response:
+        logger.error("Empty API response received")
         raise APIError("Empty response from API")
 
     # Handle string responses
     if isinstance(response, str):
         try:
             response = json.loads(response)
+            logger.debug("Parsed string response to JSON: %s", response)
         except json.JSONDecodeError:
+            logger.error(
+                "Failed to parse string response as JSON: %s",
+                response[:200],
+                extra={"response": response},
+            )
             raise APIError("Invalid JSON string response") from None
 
     if isinstance(response, dict) and response.get("error"):
-        raise APIError(response["error"])
+        error_message = response["error"]
+        logger.error("API error response: %s", error_message)
+        raise APIError(error_message)
 
     # Handle nested data structures
     if isinstance(response, dict):
@@ -163,13 +240,22 @@ def prepare_request_data(data: Dict[str, Any]) -> Dict[str, Any]:
 
 def get_endpoint(name: str, **kwargs: Any) -> str:
     """Get API endpoint by name with parameter substitution"""
+    logger.debug("Getting endpoint: %s with params: %s", name, kwargs)
     endpoint = ENDPOINTS.get(name)
     if not endpoint:
+        logger.error("Unknown endpoint requested: %s", name)
         raise APIError(f"Unknown endpoint: {name}")
     try:
         formatted_endpoint = endpoint.format(**kwargs)
+        logger.debug("Formatted endpoint: %s", formatted_endpoint)
         return formatted_endpoint
     except KeyError as e:
+        logger.error(
+            "Missing parameter for endpoint %s: %s",
+            name,
+            str(e),
+            extra={"endpoint": name, "missing_param": str(e)},
+        )
         raise APIError(f"Missing required parameter for endpoint {name}: {e}") from e
 
 
