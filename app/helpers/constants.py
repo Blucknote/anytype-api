@@ -3,23 +3,23 @@
 # API Endpoints
 ENDPOINTS = {
     # Object operations
-    "createObject": "/spaces/{space_id}/objects",
-    "deleteObject": "/spaces/{space_id}/objects/{object_id}",
-    "getObject": "/spaces/{space_id}/objects/{object_id}",
-    "getObjects": "/spaces/{space_id}/objects",
-    "searchObjects": "/spaces/{space_id}/search",
-    "globalSearch": "/search",
-    "getExport": "/spaces/{space_id}/objects/{object_id}/export/{format}",
+    "createObject": "/v1/spaces/{space_id}/objects",
+    "deleteObject": "/v1/spaces/{space_id}/objects/{object_id}",
+    "getObject": "/v1/spaces/{space_id}/objects/{object_id}",
+    "getObjects": "/v1/spaces/{space_id}/objects",
+    "searchObjects": "/v1/spaces/{space_id}/search",
+    "globalSearch": "/v1/search",
+    "getExport": "/v1/spaces/{space_id}/objects/{object_id}/export/{format}",
     # Space operations
-    "createSpace": "/spaces",
-    "getSpaces": "/spaces",
-    "getMembers": "/spaces/{space_id}/members",
+    "createSpace": "/v1/spaces",
+    "getSpaces": "/v1/spaces",
+    "getMembers": "/v1/spaces/{space_id}/members",
     # Type operations
-    "getTypes": "/spaces/{space_id}/types",
-    "getTemplates": "/spaces/{space_id}/types/{type_id}/templates",
+    "getTypes": "/v1/spaces/{space_id}/types",
+    "getTemplates": "/v1/spaces/{space_id}/types/{type_id}/templates",
     # Authentication
-    "displayCode": "/auth/display_code?app_name={app_name}",
-    "getToken": "/auth/token?challenge_id={challenge_id}&code={code}",
+    "displayCode": "/v1/auth/display_code?app_name={app_name}",
+    "getToken": "/v1/auth/token?challenge_id={challenge_id}&code={code}",
 }
 
 # Object URL patterns
@@ -30,6 +30,7 @@ SPACE_URL_PATTERN = "anytype://space?spaceId={spaceId}"
 VIEW_TYPES = {
     "note": "note",
     "task": "task",
+    "todo": "todo",
     "set": "set",
     "bookmark": "bookmark",
     "file": "file",
@@ -38,6 +39,7 @@ VIEW_TYPES = {
     "video": "video",
     "pdf": "pdf",
     "canvas": "canvas",
+    "basic": "basic",
 }
 
 # Export Formats
@@ -73,6 +75,7 @@ ICON_TIMEOUT = 5000  # milliseconds
 SYSTEM_TYPES = [
     "note",
     "task",
+    "todo",
     "set",
     "bookmark",
     "file",
@@ -81,4 +84,5 @@ SYSTEM_TYPES = [
     "video",
     "pdf",
     "canvas",
+    "basic",
 ]

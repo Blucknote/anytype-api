@@ -15,6 +15,7 @@ from app.helpers.schemas import (
     GlobalSearchRequest,
     ObjectDetails,
     SearchRequest,
+    SortOptions,
     SortOrder,
 )
 from app.main import get_validated_token
@@ -62,14 +63,18 @@ async def get_objects(
     """Get objects list"""
     try:
         type_list = types.split(",") if types else None
-        request = GetObjectsRequest(
+        sort_options = SortOptions(
+            direction="desc", timestamp=sort.value if sort else "last_modified_date"
+        )
+        request = SearchRequest(
             space_id=space_id,
+            query="",
             types=type_list,
             limit=limit,
             offset=offset,
-            sort=sort,
+            sort=sort_options,
         )
-        return await client.get_objects(request, token=token)
+        return await client.search_objects(request, token=token)
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 

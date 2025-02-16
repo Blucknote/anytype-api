@@ -12,6 +12,7 @@ class ViewType(str, Enum):
 
     NOTE = "note"
     TASK = "task"
+    TODO = "todo"
     SET = "set"
     BOOKMARK = "bookmark"
     FILE = "file"
@@ -20,6 +21,7 @@ class ViewType(str, Enum):
     VIDEO = "video"
     PDF = "pdf"
     CANVAS = "canvas"
+    BASIC = "basic"
 
 
 class ExportFormat(str, Enum):
@@ -163,6 +165,15 @@ class DeleteObjectRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
+class SortOptions(BaseModel):
+    """Sort options for search requests"""
+
+    direction: str = "desc"
+    timestamp: str = "last_modified_date"
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
 class SearchRequest(BaseModel):
     """Search request model"""
 
@@ -172,7 +183,7 @@ class SearchRequest(BaseModel):
     tags: Optional[List[str]] = None
     limit: Optional[int] = Field(default=50, ge=1, le=100)
     offset: Optional[int] = Field(default=0, ge=0)
-    sort: Optional[SortOrder] = Field(default=SortOrder.LAST_MODIFIED_DATE)
+    sort: Optional[SortOptions] = Field(default_factory=lambda: SortOptions())
     include_archived: Optional[bool] = False
     include_favorites: Optional[bool] = None
 

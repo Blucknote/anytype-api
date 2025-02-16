@@ -74,7 +74,10 @@ async def make_request(
 
     try:
         async with httpx.AsyncClient() as client:
-            url = URL(f"{base_url}{endpoint}")
+            # Remove trailing slash from base_url and leading slash from endpoint to prevent double slashes
+            base = base_url.rstrip("/")
+            path = endpoint.lstrip("/")
+            url = URL(f"{base}/{path}")
             timeout = Timeout(30.0)
             request_headers = Headers(base_headers)
 

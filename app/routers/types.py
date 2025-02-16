@@ -24,7 +24,9 @@ async def get_types(
 ) -> List[TypeDetails]:
     """Get object types"""
     try:
-        return await client.get_types(space_id=space_id, include_system=include_system, token=token)
+        return await client.get_types(
+            space_id=space_id, include_system=include_system, token=token
+        )
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
@@ -39,6 +41,11 @@ async def get_templates(
 ) -> List[TemplateDetails]:
     """Get templates"""
     try:
-        return await client.get_templates(space_id=space_id, type_id=type_id, include_system=include_system, token=token)
+        return await client.get_templates(
+            space_id=space_id,
+            type_id=type_id,
+            include_system=include_system,
+            token=token,
+        )
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e)) from e

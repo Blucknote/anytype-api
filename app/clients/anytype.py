@@ -25,6 +25,7 @@ from app.helpers.schemas import (
     MemberDetails,
     ObjectDetails,
     SearchRequest,
+    SortOptions,
     SpaceDetails,
     TemplateDetails,
     TypeDetails,
@@ -52,12 +53,17 @@ class AnytypeClient:
     async def validate_token(self, token: str) -> bool:
         """Validate authentication token"""
         try:
-            # Make a test request to validate the token
+            # Make a test request to validate the token using search
+            # We use an empty search request which is a safe way to validate the token
             await make_request(
-                "GET",
-                get_endpoint("getSpaces"),
+                "POST",
+                get_endpoint(
+                    "searchObjects",
+                    space_id="bafyreifpajdyu6t4v3ju236wdwdq32nenfg3lbbqnkszk5uudvfc2zhofa.1o744mt1sh744",
+                ),
                 str(self.base_url),
                 headers=self._get_headers(),
+                data={"query": "", "types": [], "sort": SortOptions().dict()},
                 token=token,
             )
             return True
@@ -190,7 +196,12 @@ class AnytypeClient:
             token=self._get_token(token),
         )
         responses = validate_response(result)
-        return ObjectDetails(**(responses[0] if responses else {}))
+        if responses and isinstance(responses[0], dict):
+            obj = responses[0]
+            obj.pop("blocks", None)
+            obj.pop("details", None)
+            return ObjectDetails(**obj)
+        return ObjectDetails()
 
     async def get_object(
         self, space_id: str, object_id: str, token: Optional[str] = None
@@ -205,25 +216,32 @@ class AnytypeClient:
             token=self._get_token(token),
         )
         responses = validate_response(result)
-        return ObjectDetails(**(responses[0] if responses else {}))
+        if responses and isinstance(responses[0], dict):
+            obj = responses[0]
+            obj.pop("blocks", None)
+            obj.pop("details", None)
+            return ObjectDetails(**obj)
+        return ObjectDetails()
 
     async def get_objects(
         self, request: GetObjectsRequest, token: Optional[str] = None
     ) -> List[ObjectDetails]:
         """Get objects list"""
-        data = prepare_request_data(request.dict())
-        space_id = data.pop("space_id")
-        headers = self._get_headers()
-        result = await make_request(
-            "GET",
-            get_endpoint("getObjects", space_id=space_id),
-            str(self.base_url),
-            params=data,
-            headers=headers,
-            token=self._get_token(token),
+        # Convert GetObjectsRequest to SearchRequest
+        # Create sort options first to ensure proper validation
+        sort_options = SortOptions(
+            direction="desc",
+            timestamp=request.sort.value if request.sort else "last_modified_date",
         )
-        responses = validate_response(result)
-        return [ObjectDetails(**obj) for obj in responses]
+        search_request = SearchRequest(
+            query="",
+            space_id=request.space_id,
+            types=request.types,
+            limit=request.limit,
+            offset=request.offset,
+            sort=sort_options,
+        )
+        return await self.search_objects(search_request, token=token)
 
     async def delete_object(
         self, request: DeleteObjectRequest, token: Optional[str] = None
@@ -259,7 +277,14 @@ class AnytypeClient:
             token=self._get_token(token),
         )
         responses = validate_response(result)
-        return [ObjectDetails(**obj) for obj in responses]
+        # Filter out blocks and details from response objects
+        filtered_responses = []
+        for obj in responses:
+            if isinstance(obj, dict):
+                obj.pop("blocks", None)
+                obj.pop("details", None)
+                filtered_responses.append(obj)
+        return [ObjectDetails(**obj) for obj in filtered_responses]
 
     async def global_search(
         self, request: GlobalSearchRequest, token: Optional[str] = None
@@ -276,7 +301,14 @@ class AnytypeClient:
             token=self._get_token(token),
         )
         responses = validate_response(result)
-        return [ObjectDetails(**obj) for obj in responses]
+        # Filter out blocks and details from response objects
+        filtered_responses = []
+        for obj in responses:
+            if isinstance(obj, dict):
+                obj.pop("blocks", None)
+                obj.pop("details", None)
+                filtered_responses.append(obj)
+        return [ObjectDetails(**obj) for obj in filtered_responses]
 
     async def get_types(
         self,

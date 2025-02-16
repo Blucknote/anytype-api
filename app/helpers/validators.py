@@ -51,7 +51,10 @@ class TypeValidator:
             except Exception as e:
                 error_msg = str(e)
                 # Handle both raw error message and wrapped APIError message format
-                if "type not found" in error_msg.lower() or "'message': 'type not found'" in error_msg:
+                if (
+                    "type not found" in error_msg.lower()
+                    or "'message': 'type not found'" in error_msg
+                ):
                     # If types can't be fetched, don't validate
                     # This handles the case where the space might not support type listing
                     return types

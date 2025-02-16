@@ -27,7 +27,7 @@ def setup_logging() -> None:
     if settings.log_file:
         log_file = Path(settings.log_file)
         log_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Parse rotation interval
         interval_mapping = {
             "day": "D",
@@ -53,7 +53,9 @@ def setup_logging() -> None:
         file_handler.setFormatter(formatter)
         file_handler.suffix = "%Y-%m-%d_%H-%M-%S"
         if settings.log_compression == "zip":
-            file_handler.rotator = lambda source, dest: Path(source).rename(dest + ".zip")
+            file_handler.rotator = lambda source, dest: Path(source).rename(
+                dest + ".zip"
+            )
         logger.addHandler(file_handler)
 
     # Set logging levels for third-party libraries
