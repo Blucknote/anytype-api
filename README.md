@@ -91,6 +91,53 @@ anytype-api/
 └── README.md
 ```
 
+## MCP Server
+
+This project includes an **MCP (Model Context Protocol) server** implementation that exposes Anytype API operations as MCP tools, enabling integration with MCP-compatible clients.
+
+### Features
+
+- Create, retrieve, list, delete, and export objects
+- Manage spaces and members
+- Search within spaces or globally
+- Manage object types and templates
+
+### Configuration
+
+The MCP server uses the following environment variables (can be set in `.env` file):
+
+- `ANYTYPE_API_URL` — Base URL of the Anytype API (e.g., `http://localhost:31009`)
+- `ANYTYPE_SESSION_TOKEN` — Session token for API access
+- `ANYTYPE_APP_KEY` — Application key for authentication
+
+### Running the MCP Server
+
+You can run the MCP server directly:
+
+```bash
+python app/anytype_mcp_server.py
+```
+
+or inside Docker (see below).
+
+## Docker
+
+You can build and run the application using Docker:
+
+### Build the Docker image
+
+```bash
+docker build -t anytype-api .
+```
+
+### Run the Docker container
+
+```bash
+docker run --rm --env-file .env --network host anytype-api
+```
+
+This will start the API server with environment variables loaded from `.env` and network mode set to host.
+
 ## License
 
 MIT License

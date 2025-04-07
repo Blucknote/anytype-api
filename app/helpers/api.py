@@ -43,7 +43,10 @@ async def make_request(
         params: Query parameters
         token: Optional Bearer token for authentication
     """
-    base_headers = {"Content-Type": "application/json"}
+    base_headers = {
+        "Content-Type": "application/json",
+        "accept": "application/json",
+    }
     if headers:
         base_headers.update(headers)
 
@@ -53,6 +56,7 @@ async def make_request(
         # Add token to headers for Bearer authentication
         base_headers["Authorization"] = f"Bearer {auth_token}"
 
+    logger.info(f"token: {auth_token}")
     start_time = time.time()
     logger.info(
         "Making API request: %s %s",
@@ -102,6 +106,7 @@ async def make_request(
                     endpoint,
                     extra={"status_code": 401},
                 )
+                logger.warning(f"Response: {response.text}")
                 raise APIError(
                     "Unauthorized. Please check your authentication token.", 401
                 )

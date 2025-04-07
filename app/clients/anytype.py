@@ -1,5 +1,6 @@
 """Anytype API client implementation"""
 
+import logging
 from typing import Any, Dict, List, Optional
 
 from app.core.config import settings
@@ -19,8 +20,6 @@ from app.helpers.schemas import (
     ExportFormat,
     GetMembersRequest,
     GetObjectsRequest,
-    GetTemplatesRequest,
-    GetTypesRequest,
     GlobalSearchRequest,
     MemberDetails,
     ObjectDetails,
@@ -30,6 +29,8 @@ from app.helpers.schemas import (
     TemplateDetails,
     TypeDetails,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AnytypeClient:

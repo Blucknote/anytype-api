@@ -1,5 +1,6 @@
 """API client implementation"""
 
+import logging
 from typing import Optional
 
 from fastapi import Depends
@@ -27,6 +28,8 @@ from app.helpers.schemas import (
     Type,
     TypeResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class APIClient:
