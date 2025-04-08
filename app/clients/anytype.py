@@ -13,6 +13,7 @@ from app.helpers.api import (
 )
 from app.helpers.schemas import (
     BaseResponse,
+    Block,
     CreateObjectRequest,
     CreateSpaceRequest,
     DeleteObjectRequest,
@@ -224,9 +225,17 @@ class AnytypeClient:
             obj = responses[0]
             if "object" in obj and isinstance(obj["object"], dict):
                 obj = obj["object"]
+            blocks_data = obj.get("blocks", [])
+            blocks = []
+            if isinstance(blocks_data, list):
+                for b in blocks_data:
+                    try:
+                        blocks.append(Block(**b))
+                    except Exception:
+                        pass
             obj.pop("blocks", None)
             obj.pop("details", None)
-            return ObjectDetails(**obj)
+            return ObjectDetails(**obj, blocks=blocks)
         return ObjectDetails()
 
     async def get_objects(

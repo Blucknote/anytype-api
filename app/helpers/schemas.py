@@ -67,6 +67,31 @@ class PaginationParams(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
+class BlockText(BaseModel):
+    """Block text content"""
+
+    text: str
+    style: str
+    checked: bool = False
+    color: Optional[str] = ""
+    icon: Optional[str] = ""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class Block(BaseModel):
+    """Block structure"""
+
+    id: str
+    children_ids: Optional[List[str]] = None
+    background_color: Optional[str] = ""
+    align: Optional[str] = None
+    vertical_align: Optional[str] = None
+    text: Optional[BlockText] = None
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
 class ObjectDetails(BaseModel):
     """Object details model"""
 
@@ -91,6 +116,7 @@ class ObjectDetails(BaseModel):
     tags: Optional[List[str]] = None
     relations: Optional[Dict[str, Any]] = None
     permissions: Optional[Dict[str, Any]] = None
+    blocks: Optional[List[Block]] = None
 
     model_config = ConfigDict(populate_by_name=True)
 
