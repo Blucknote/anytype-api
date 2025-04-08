@@ -199,6 +199,9 @@ class AnytypeClient:
         responses = validate_response(result)
         if responses and isinstance(responses[0], dict):
             obj = responses[0]
+            # Extract nested 'object' if present
+            if "object" in obj and isinstance(obj["object"], dict):
+                obj = obj["object"]
             obj.pop("blocks", None)
             obj.pop("details", None)
             return ObjectDetails(**obj)
@@ -219,6 +222,8 @@ class AnytypeClient:
         responses = validate_response(result)
         if responses and isinstance(responses[0], dict):
             obj = responses[0]
+            if "object" in obj and isinstance(obj["object"], dict):
+                obj = obj["object"]
             obj.pop("blocks", None)
             obj.pop("details", None)
             return ObjectDetails(**obj)

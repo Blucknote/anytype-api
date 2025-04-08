@@ -56,7 +56,6 @@ async def make_request(
         # Add token to headers for Bearer authentication
         base_headers["Authorization"] = f"Bearer {auth_token}"
 
-    logger.info(f"token: {auth_token}")
     start_time = time.time()
     logger.info(
         "Making API request: %s %s",

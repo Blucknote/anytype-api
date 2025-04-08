@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import logging
 import os
-from typing import Any, Awaitable, Callable, List, Optional
+from typing import List, Optional
 
-from fastapi import HTTPException, Request, status
+from fastapi import Request
 from fastapi.security.utils import get_authorization_scheme_param
 from mcp.server.fastmcp import FastMCP
 
@@ -32,8 +32,6 @@ API_URL = os.environ.get("ANYTYPE_API_URL", "")
 SESSION_TOKEN = os.environ.get("ANYTYPE_SESSION_TOKEN", "")
 APP_KEY = os.environ.get("ANYTYPE_APP_KEY", "")
 TOKEN = APP_KEY
-
-logger.info(f"[DEBUG] MCP server loaded ANYTYPE_APP_KEY: '{APP_KEY}'")
 
 client = AnytypeClient(
     base_url=API_URL,
