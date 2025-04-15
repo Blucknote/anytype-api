@@ -187,6 +187,10 @@ class AnytypeClient:
     ) -> ObjectDetails:
         """Create a new object"""
         data = prepare_request_data(request.dict())
+        # Guarantee template_id is always present
+        data["template_id"] = data.get("template_id", "")
+        # Ensure type is sent as object_type_unique_key
+        data["object_type_unique_key"] = data.pop("type", "")
         space_id = data.pop("space_id")
         headers = self._get_headers()
         result = await make_request(
@@ -416,3 +420,42 @@ class AnytypeClient:
 def get_anytype_client() -> AnytypeClient:
     """Dependency for getting AnytypeClient instance"""
     return AnytypeClient()
+
+
+async def _create_object_in_space(
+    self,
+    space_id: str,
+    payload: Dict[str, Any],
+    token: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Create a new object in a space (OpenAPI spec compliant).
+
+    Args:
+        space_id: The ID of the space.
+        payload: The request payload matching OpenAPI spec.
+        token: Optional bearer token.
+
+    Returns:
+        The parsed JSON response.
+    """
+    # Guarantee template_id is always present
+    payload["template_id"] = payload.get("template_id", "")
+    # Ensure type_key is sent as object_type_unique_key
+    if "type_key" in payload:
+        payload["object_type_unique_key"] = payload.pop("type_key")
+    headers = self._get_headers()
+    result = await make_request(
+        "POST",
+        get_endpoint("createObject", space_id=space_id),
+        str(self.base_url),
+        data=payload,
+        headers=headers,
+        token=self._get_token(token),
+    )
+    # Return raw response dict (OpenAPI spec response)
+    return validate_response(result)[0] if result else {}
+
+
+# Attach method to AnytypeClient class
+AnytypeClient.create_object_in_space = _create_object_in_space

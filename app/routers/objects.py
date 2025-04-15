@@ -9,31 +9,20 @@ from app.helpers.api import APIError
 from app.helpers.schemas import (
     BaseResponse,
     CreateObjectRequest,
+    CreateObjectRequestSpec,
     DeleteObjectRequest,
     ExportFormat,
     GetObjectsRequest,
     GlobalSearchRequest,
     ObjectDetails,
+    ObjectResponseSpec,
     SearchRequest,
     SortOptions,
     SortOrder,
 )
 from app.main import get_validated_token
 
-router = APIRouter(prefix="/object", tags=["objects"])
-
-
-@router.post("/create", response_model=ObjectDetails)
-async def create_object(
-    request: CreateObjectRequest,
-    token: str = Depends(get_validated_token),
-    client: AnytypeClient = Depends(get_anytype_client),
-) -> ObjectDetails:
-    """Create a new object in Anytype"""
-    try:
-        return await client.create_object(request, token=token)
-    except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
+router = APIRouter(prefix="/api/core/object", tags=["core objects"])
 
 
 @router.get("/get/{space_id}/{object_id}", response_model=ObjectDetails)
@@ -134,5 +123,39 @@ async def get_export(
             space_id, object_id, export_format, token=token
         )
         return {"content": content}
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
+
+
+@router.post(
+    "/spaces/{space_id}/objects",
+    response_model=ObjectResponseSpec,
+    summary="Create a new object (OpenAPI spec)",
+    description="Creates a new object in the specified space following the OpenAPI spec.",
+    responses={
+        200: {"description": "Object created successfully"},
+        400: {"description": "Invalid request data"},
+        401: {"description": "Authentication failed"},
+        423: {"description": "Rate limit exceeded"},
+        500: {"description": "Internal server error"},
+    },
+)
+async def create_object_spec(
+    space_id: str,
+    request: CreateObjectRequestSpec,
+    token: str = Depends(get_validated_token),
+    client: AnytypeClient = Depends(get_anytype_client),
+) -> ObjectResponseSpec:
+    """Create a new object in a space (OpenAPI spec compliant)"""
+    try:
+        # Prepare payload matching OpenAPI spec
+        payload = request.dict(exclude_unset=True)
+        # Call backend API (adjust method as needed)
+        response_data = await client.create_object_in_space(
+            space_id=space_id,
+            payload=payload,
+            token=token,
+        )
+        return ObjectResponseSpec(**response_data)
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e)) from e

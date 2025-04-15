@@ -102,6 +102,23 @@ This project includes an **MCP (Model Context Protocol) server** implementation 
 - Search within spaces or globally
 - Manage object types and templates
 
+#### Object Creation Tool
+
+The MCP server exposes a `create_object` tool for creating new objects in Anytype.  
+**Parameters:**
+- `space_id` (str, required): ID of the space to create the object in.
+- `name` (str, required): Name of the object.
+- `object_type_unique_key` (str, required): Unique key of the object type.
+- `template_id` (str, optional, default: `""`): Template ID to use for the object. Preferred to be `""` (empty string) if not using a template.
+- `body` (str, optional): Markdown content for the object body. Supports markdown formatting.
+- `description` (str, optional): Description of the object.
+- `icon` (str, optional): Icon for the object.
+- `source` (str, optional): Source for the object.
+
+**Notes:**
+- `template_id` should be set to `""` if you do not wish to use a template.
+- The `body` field supports markdown content.
+
 ### Configuration
 
 The MCP server uses the following environment variables (can be set in `.env` file):

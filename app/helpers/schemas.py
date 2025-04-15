@@ -126,6 +126,7 @@ class TypeDetails(BaseModel):
 
     id: str
     name: str
+    unique_key: Optional[str] = None
     icon: Optional[str] = None
     description: Optional[str] = None
     is_system: bool = False
@@ -313,3 +314,47 @@ class GetTemplatesRequest(BaseModel):
     """Get templates request model"""
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+class IconSpec(BaseModel):
+    """Icon schema matching OpenAPI"""
+
+    color: Optional[str] = None
+    emoji: Optional[str] = None
+    file: Optional[str] = None
+    format: Optional[str] = None
+    name: Optional[str] = None
+
+
+class CreateObjectRequestSpec(BaseModel):
+    """Create object request matching OpenAPI"""
+
+    name: str
+    description: Optional[str] = None
+    body: Optional[str] = None
+    icon: Optional[str] = None
+    source: Optional[str] = None
+    template_id: Optional[str] = None
+    object_type_unique_key: str
+
+
+class ObjectDetailsSpec(BaseModel):
+    """Object details matching OpenAPI"""
+
+    archived: Optional[bool] = None
+    blocks: Optional[List[Dict[str, Any]]] = None
+    icon: Optional[str] = None
+    id: str
+    layout: Optional[str] = None
+    name: Optional[str] = None
+    object: Optional[str] = None
+    properties: Optional[List[Dict[str, Any]]] = None
+    snippet: Optional[str] = None
+    space_id: Optional[str] = None
+    type: Optional[str] = None
+
+
+class ObjectResponseSpec(BaseModel):
+    """Object response wrapper matching OpenAPI"""
+
+    object: ObjectDetailsSpec

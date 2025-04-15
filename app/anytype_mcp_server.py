@@ -55,15 +55,50 @@ def extract_token_from_request(request: Request) -> Optional[str]:
 
 @mcp.tool()
 async def create_object(
-    request: CreateObjectRequest, token: Optional[str] = TOKEN
+    space_id: str,
+    name: str,
+    body: str,
+    object_type_unique_key: str,
+    template_id: Optional[str] = "",
+    description: Optional[str] = None,
+    icon: Optional[str] = None,
+    source: Optional[str] = None,
+    token: Optional[str] = TOKEN,
 ) -> ObjectDetails:
     """
-    Create a new object in Anytype
+    Create a new object in Anytype.
 
     Args:
-        request: Object creation details including space_id, type, name, etc.
+        space_id: ID of the space to create the object in (required).
+        name: Name of the object (required).
+        object_type_unique_key: Unique key of the object type (required).
+        template_id: Template ID to use for the object. Preferred to be "" (empty string) if not using a template.
+        body: content for the object body, Markdown supported
+        description: Description of the object (optional).
+        icon: Icon for the object (optional).
+        source: Source for the object (optional).
+        token: Optional authentication token.
+
+    Returns:
+        The created object details.
     """
-    return await client.create_object(request, token=token)
+    payload = {
+        "space_id": space_id,
+        "name": name,
+        "object_type_unique_key": object_type_unique_key,
+        "template_id": template_id if template_id is not None else "",
+        "body": body,
+        "description": description,
+        "icon": icon,
+        "source": source,
+    }
+    # Remove keys with value None to avoid sending them unnecessarily
+    payload = {k: v for k, v in payload.items() if v is not None}
+    # Use the OpenAPI-compliant client method
+    response = await client.create_object_in_space(space_id, payload, token=token)
+    return (
+        ObjectDetails(**response["object"]) if "object" in response else ObjectDetails()
+    )
 
 
 @mcp.tool()
