@@ -73,11 +73,11 @@ async def create_object(
 
     Args:
         space_id: ID of the space to create the object in (required).
-        request: The object creation request body.
+        request: The object creation request body (CreateObjectRequest).
         token: Optional authentication token.
 
     Returns:
-        The created object details.
+        The created object details (ObjectResponse).
     """
     return await client.create_object(space_id, request, token=token)
 
@@ -140,7 +140,6 @@ async def search_objects(
         space_id: ID of the space to search within.
         request: Search parameters including query, filters, sorting, etc.
     """
-    logger.info("LLM using search objects tool")
     return await client.search_objects(space_id, request, token=token)
 
 
@@ -154,7 +153,6 @@ async def global_search(
     Args:
         request: Global search parameters including query and filters
     """
-    logger.info("LLM using global search tool")
     return await client.global_search(request, token=token)
 
 
@@ -202,7 +200,6 @@ async def list_spaces(
         limit: Maximum number of spaces to return (1-1000)
         offset: Number of spaces to skip
     """
-    logger.info("LLM using list spaces tool")
     return await client.get_spaces(limit, offset, token=token)
 
 
