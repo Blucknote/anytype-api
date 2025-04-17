@@ -3,6 +3,8 @@
 import logging
 from typing import Any, Dict, List, Optional
 
+import httpx
+
 from app.core.config import settings
 from app.helpers.api import (
     APIError,
@@ -12,23 +14,26 @@ from app.helpers.api import (
     validate_response,
 )
 from app.helpers.schemas import (
-    BaseResponse,
-    Block,
     CreateObjectRequest,
     CreateSpaceRequest,
-    DeleteObjectRequest,
     DisplayCodeResponse,
     ExportFormat,
-    GetMembersRequest,
-    GetObjectsRequest,
-    GlobalSearchRequest,
-    MemberDetails,
-    ObjectDetails,
+    MemberResponse,
+    ObjectExportResponse,
+    ObjectResponse,
+    PaginatedMemberResponse,
+    PaginatedObjectResponse,
+    PaginatedSpaceResponse,
+    PaginatedTemplateResponse,
+    PaginatedTypeResponse,
+    PaginatedViewResponse,
     SearchRequest,
     SortOptions,
-    SpaceDetails,
-    TemplateDetails,
-    TypeDetails,
+    SpaceResponse,
+    TemplateResponse,
+    TokenResponse,
+    TypeResponse,
+    View,
 )
 
 logger = logging.getLogger(__name__)
@@ -76,7 +81,7 @@ class AnytypeClient:
 
     async def get_token(
         self, code: str, challenge_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> TokenResponse:
         """Get authentication token from display code"""
         headers = {**self.headers}
         if self.app_name:
@@ -96,13 +101,8 @@ class AnytypeClient:
             data=data,
             headers=headers,
         )
-        responses = validate_response(result)
-        if len(responses) > 0:
-            response = responses[0]
-            if "token" in response and isinstance(response["token"], dict):
-                self.session_token = response["token"].get("session_token", "")
-            return response
-        return {}
+        # The API returns a TokenResponse structure directly
+        return TokenResponse(**result)
 
     async def get_auth_display_code(
         self, app_name: str = "Anytype API"
@@ -121,18 +121,12 @@ class AnytypeClient:
             data=data,
             headers=headers,
         )
-        responses = validate_response(result)
-        if len(responses) > 0:
-            response = responses[0]
-            self.challenge_id = response.get("challenge_id", "")
-            return DisplayCodeResponse(
-                code=response.get("code", ""), challenge_id=self.challenge_id or ""
-            )
-        return DisplayCodeResponse(code="", challenge_id="")
+        # The API returns a DisplayCodeResponse structure directly
+        return DisplayCodeResponse(**result)
 
     async def create_space(
         self, request: CreateSpaceRequest, token: Optional[str] = None
-    ) -> SpaceDetails:
+    ) -> SpaceResponse:
         """Create a new space"""
         data = prepare_request_data(request.dict())
         headers = self._get_headers()
@@ -144,12 +138,12 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        return SpaceDetails(**(responses[0] if responses else {}))
+        # The API returns a SpaceResponse structure directly
+        return SpaceResponse(**result)
 
     async def get_spaces(
-        self, limit: int = 50, offset: int = 0, token: Optional[str] = None
-    ) -> List[SpaceDetails]:
+        self, limit: int = 100, offset: int = 0, token: Optional[str] = None
+    ) -> PaginatedSpaceResponse:
         """Get list of spaces"""
         headers = self._get_headers()
         params = {"limit": limit, "offset": offset}
@@ -161,37 +155,65 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        return [SpaceDetails(**space) for space in responses]
+        # The API returns a PaginatedResponse structure directly
+        return PaginatedSpaceResponse(**result)
+
+    async def get_space(
+        self, space_id: str, token: Optional[str] = None
+    ) -> SpaceResponse:
+        """Get space details"""
+        headers = self._get_headers()
+        result = await make_request(
+            "GET",
+            get_endpoint("getSpace", space_id=space_id),
+            str(self.base_url),
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a SpaceResponse structure directly
+        return SpaceResponse(**result)
 
     async def get_members(
-        self, request: GetMembersRequest, token: Optional[str] = None
-    ) -> List[MemberDetails]:
+        self,
+        space_id: str,
+        limit: int = 100,
+        offset: int = 0,
+        token: Optional[str] = None,
+    ) -> PaginatedMemberResponse:
         """Get space members"""
-        data = prepare_request_data(request.dict())
-        space_id = data.pop("space_id")
         headers = self._get_headers()
+        params = {"limit": limit, "offset": offset}
         result = await make_request(
             "GET",
             get_endpoint("getMembers", space_id=space_id),
             str(self.base_url),
-            params=data,
+            params=params,
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        return [MemberDetails(**member) for member in responses]
+        # The API returns a PaginatedResponse structure directly
+        return PaginatedMemberResponse(**result)
+
+    async def get_member(
+        self, space_id: str, member_id: str, token: Optional[str] = None
+    ) -> MemberResponse:
+        """Get space member details"""
+        headers = self._get_headers()
+        result = await make_request(
+            "GET",
+            get_endpoint("getMember", space_id=space_id, member_id=member_id),
+            str(self.base_url),
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a MemberResponse structure directly
+        return MemberResponse(**result)
 
     async def create_object(
-        self, request: CreateObjectRequest, token: Optional[str] = None
-    ) -> ObjectDetails:
+        self, space_id: str, request: CreateObjectRequest, token: Optional[str] = None
+    ) -> ObjectResponse:
         """Create a new object"""
         data = prepare_request_data(request.dict())
-        # Guarantee template_id is always present
-        data["template_id"] = data.get("template_id", "")
-        # Ensure type is sent as object_type_unique_key
-        data["object_type_unique_key"] = data.pop("type", "")
-        space_id = data.pop("space_id")
         headers = self._get_headers()
         result = await make_request(
             "POST",
@@ -201,20 +223,12 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        if responses and isinstance(responses[0], dict):
-            obj = responses[0]
-            # Extract nested 'object' if present
-            if "object" in obj and isinstance(obj["object"], dict):
-                obj = obj["object"]
-            obj.pop("blocks", None)
-            obj.pop("details", None)
-            return ObjectDetails(**obj)
-        return ObjectDetails()
+        # The API returns an ObjectResponse structure directly
+        return ObjectResponse(**result)
 
     async def get_object(
         self, space_id: str, object_id: str, token: Optional[str] = None
-    ) -> ObjectDetails:
+    ) -> ObjectResponse:
         """Get object details"""
         headers = self._get_headers()
         result = await make_request(
@@ -224,51 +238,121 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        if responses and isinstance(responses[0], dict):
-            obj = responses[0]
-            if "object" in obj and isinstance(obj["object"], dict):
-                obj = obj["object"]
-            blocks_data = obj.get("blocks", [])
-            blocks = []
-            if isinstance(blocks_data, list):
-                for b in blocks_data:
-                    try:
-                        blocks.append(Block(**b))
-                    except Exception:
-                        pass
-            obj.pop("blocks", None)
-            obj.pop("details", None)
-            return ObjectDetails(**obj, blocks=blocks)
-        return ObjectDetails()
+        # The API returns an ObjectResponse structure directly
+        return ObjectResponse(**result)
+
+    async def get_objects_in_list(
+        self,
+        space_id: str,
+        list_id: str,
+        view_id: str,
+        limit: int = 100,
+        offset: int = 0,
+        token: Optional[str] = None,
+    ) -> PaginatedObjectResponse:
+        """Get objects in a list"""
+        headers = self._get_headers()
+        params = {"limit": limit, "offset": offset}
+        result = await make_request(
+            "GET",
+            get_endpoint(
+                "getObjectsInList", space_id=space_id, list_id=list_id, view_id=view_id
+            ),
+            str(self.base_url),
+            params=params,
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a PaginatedResponse structure directly
+        return PaginatedObjectResponse(**result)
+
+    async def add_objects_to_list(
+        self,
+        space_id: str,
+        list_id: str,
+        object_ids: List[str],
+        token: Optional[str] = None,
+    ) -> str:
+        """Add objects to a list"""
+        headers = self._get_headers()
+        result = await make_request(
+            "POST",
+            get_endpoint("addObjectsToList", space_id=space_id, list_id=list_id),
+            str(self.base_url),
+            data=object_ids,
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a string response directly
+        return result
+
+    async def remove_object_from_list(
+        self, space_id: str, list_id: str, object_id: str, token: Optional[str] = None
+    ) -> str:
+        """Remove object from a list"""
+        headers = self._get_headers()
+        result = await make_request(
+            "DELETE",
+            get_endpoint(
+                "removeObjectFromList",
+                space_id=space_id,
+                list_id=list_id,
+                object_id=object_id,
+            ),
+            str(self.base_url),
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a string response directly
+        return result
+
+    async def get_list_views(
+        self,
+        space_id: str,
+        list_id: str,
+        limit: int = 100,
+        offset: int = 0,
+        token: Optional[str] = None,
+    ) -> PaginatedViewResponse:
+        """Get list views"""
+        headers = self._get_headers()
+        params = {"limit": limit, "offset": offset}
+        result = await make_request(
+            "GET",
+            get_endpoint("getListView", space_id=space_id, list_id=list_id),
+            str(self.base_url),
+            params=params,
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a PaginatedResponse structure directly
+        return PaginatedViewResponse(**result)
 
     async def get_objects(
-        self, request: GetObjectsRequest, token: Optional[str] = None
-    ) -> List[ObjectDetails]:
+        self,
+        space_id: str,
+        limit: int = 100,
+        offset: int = 0,
+        token: Optional[str] = None,
+    ) -> PaginatedObjectResponse:
         """Get objects list"""
-        # Convert GetObjectsRequest to SearchRequest
-        # Create sort options first to ensure proper validation
-        sort_options = SortOptions(
-            direction="desc",
-            timestamp=request.sort.value if request.sort else "last_modified_date",
+        headers = self._get_headers()
+        params = {"limit": limit, "offset": offset}
+        result = await make_request(
+            "GET",
+            get_endpoint("getObjects", space_id=space_id),
+            str(self.base_url),
+            params=params,
+            headers=headers,
+            token=self._get_token(token),
         )
-        search_request = SearchRequest(
-            query="",
-            space_id=request.space_id,
-            types=request.types,
-            limit=request.limit,
-            offset=request.offset,
-            sort=sort_options,
-        )
-        return await self.search_objects(search_request, token=token)
+        # The API returns a PaginatedResponse structure directly
+        return PaginatedObjectResponse(**result)
 
     async def delete_object(
-        self, request: DeleteObjectRequest, token: Optional[str] = None
-    ) -> BaseResponse:
+        self, space_id: str, object_id: str, token: Optional[str] = None
+    ) -> ObjectResponse:
         """Delete an object"""
-        data = prepare_request_data(request.dict())
-        space_id = data.pop("space_id")
-        object_id = data.pop("object_id")
         headers = self._get_headers()
         result = await make_request(
             "DELETE",
@@ -277,15 +361,14 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        return BaseResponse(**(responses[0] if responses else {}))
+        # The API returns an ObjectResponse structure directly
+        return ObjectResponse(**result)
 
     async def search_objects(
-        self, request: SearchRequest, token: Optional[str] = None
-    ) -> List[ObjectDetails]:
-        """Search for objects"""
+        self, space_id: str, request: SearchRequest, token: Optional[str] = None
+    ) -> PaginatedObjectResponse:
+        """Search for objects within a space"""
         data = prepare_request_data(request.dict())
-        space_id = data.pop("space_id")
         headers = self._get_headers()
         result = await make_request(
             "POST",
@@ -295,19 +378,12 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        # Filter out blocks and details from response objects
-        filtered_responses = []
-        for obj in responses:
-            if isinstance(obj, dict):
-                obj.pop("blocks", None)
-                obj.pop("details", None)
-                filtered_responses.append(obj)
-        return [ObjectDetails(**obj) for obj in filtered_responses]
+        # The API returns a PaginatedResponse structure directly
+        return PaginatedObjectResponse(**result)
 
     async def global_search(
-        self, request: GlobalSearchRequest, token: Optional[str] = None
-    ) -> List[ObjectDetails]:
+        self, request: SearchRequest, token: Optional[str] = None
+    ) -> PaginatedObjectResponse:
         """Global search across all spaces"""
         data = prepare_request_data(request.dict())
         headers = self._get_headers()
@@ -319,27 +395,19 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        # Filter out blocks and details from response objects
-        filtered_responses = []
-        for obj in responses:
-            if isinstance(obj, dict):
-                obj.pop("blocks", None)
-                obj.pop("details", None)
-                filtered_responses.append(obj)
-        return [ObjectDetails(**obj) for obj in filtered_responses]
+        # The API returns a PaginatedResponse structure directly
+        return PaginatedObjectResponse(**result)
 
     async def get_types(
         self,
-        space_id: Optional[str] = None,
-        include_system: Optional[bool] = True,
+        space_id: str,
+        limit: int = 100,
+        offset: int = 0,
         token: Optional[str] = None,
-    ) -> List[TypeDetails]:
+    ) -> PaginatedTypeResponse:
         """Get object types"""
         headers = self._get_headers()
-        params = {"include_system": include_system}
-        if space_id:
-            params["space_id"] = space_id
+        params = {"limit": limit, "offset": offset}
         result = await make_request(
             "GET",
             get_endpoint("getTypes", space_id=space_id),
@@ -348,23 +416,35 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        return [TypeDetails(**type_) for type_ in responses]
+        # The API returns a PaginatedResponse structure directly
+        return PaginatedTypeResponse(**result)
+
+    async def get_type(
+        self, space_id: str, type_id: str, token: Optional[str] = None
+    ) -> TypeResponse:
+        """Get object type details"""
+        headers = self._get_headers()
+        result = await make_request(
+            "GET",
+            get_endpoint("getType", space_id=space_id, type_id=type_id),
+            str(self.base_url),
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a TypeResponse structure directly
+        return TypeResponse(**result)
 
     async def get_templates(
         self,
-        space_id: Optional[str] = None,
-        type_id: Optional[str] = None,
-        include_system: Optional[bool] = True,
+        space_id: str,
+        type_id: str,
+        limit: int = 100,
+        offset: int = 0,
         token: Optional[str] = None,
-    ) -> List[TemplateDetails]:
+    ) -> PaginatedTemplateResponse:
         """Get templates"""
         headers = self._get_headers()
-        params = {"include_system": include_system}
-        if space_id:
-            params["space_id"] = space_id
-        if type_id:
-            params["type_id"] = type_id
+        params = {"limit": limit, "offset": offset}
         result = await make_request(
             "GET",
             get_endpoint("getTemplates", space_id=space_id, type_id=type_id),
@@ -373,8 +453,28 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        return [TemplateDetails(**template) for template in responses]
+        # The API returns a PaginatedResponse structure directly
+        return PaginatedTemplateResponse(**result)
+
+    async def get_template(
+        self, space_id: str, type_id: str, template_id: str, token: Optional[str] = None
+    ) -> TemplateResponse:
+        """Get template details"""
+        headers = self._get_headers()
+        result = await make_request(
+            "GET",
+            get_endpoint(
+                "getTemplate",
+                space_id=space_id,
+                type_id=type_id,
+                template_id=template_id,
+            ),
+            str(self.base_url),
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a TemplateResponse structure directly
+        return TemplateResponse(**result)
 
     async def get_export(
         self,
@@ -382,11 +482,11 @@ class AnytypeClient:
         object_id: str,
         format: ExportFormat,
         token: Optional[str] = None,
-    ) -> str:
+    ) -> ObjectExportResponse:
         """Export an object in specified format"""
         headers = self._get_headers()
         result = await make_request(
-            "POST",
+            "GET",
             get_endpoint(
                 "getExport",
                 space_id=space_id,
@@ -397,12 +497,8 @@ class AnytypeClient:
             headers=headers,
             token=self._get_token(token),
         )
-        responses = validate_response(result)
-        if len(responses) > 0:
-            content = responses[0].get("content")
-            if isinstance(content, str):
-                return content
-        return ""
+        # The API returns an ObjectExportResponse structure directly
+        return ObjectExportResponse(**result)
 
     def _get_headers(self) -> Dict[str, str]:
         """Get request headers with optional app name"""
@@ -420,42 +516,3 @@ class AnytypeClient:
 def get_anytype_client() -> AnytypeClient:
     """Dependency for getting AnytypeClient instance"""
     return AnytypeClient()
-
-
-async def _create_object_in_space(
-    self,
-    space_id: str,
-    payload: Dict[str, Any],
-    token: Optional[str] = None,
-) -> Dict[str, Any]:
-    """
-    Create a new object in a space (OpenAPI spec compliant).
-
-    Args:
-        space_id: The ID of the space.
-        payload: The request payload matching OpenAPI spec.
-        token: Optional bearer token.
-
-    Returns:
-        The parsed JSON response.
-    """
-    # Guarantee template_id is always present
-    payload["template_id"] = payload.get("template_id", "")
-    # Ensure type_key is sent as object_type_unique_key
-    if "type_key" in payload:
-        payload["object_type_unique_key"] = payload.pop("type_key")
-    headers = self._get_headers()
-    result = await make_request(
-        "POST",
-        get_endpoint("createObject", space_id=space_id),
-        str(self.base_url),
-        data=payload,
-        headers=headers,
-        token=self._get_token(token),
-    )
-    # Return raw response dict (OpenAPI spec response)
-    return validate_response(result)[0] if result else {}
-
-
-# Attach method to AnytypeClient class
-AnytypeClient.create_object_in_space = _create_object_in_space

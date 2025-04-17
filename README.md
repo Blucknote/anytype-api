@@ -36,9 +36,8 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 ## API Documentation
 
-Once the application is running, you can access:
-- Interactive API documentation: http://localhost:8000/docs
-- Alternative API documentation: http://localhost:8000/redoc
+Once the application is running, you can access the interactive API documentation at:
+- http://localhost:8000/docs
 
 ## Testing
 

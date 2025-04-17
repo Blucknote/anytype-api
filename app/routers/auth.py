@@ -7,45 +7,32 @@ from fastapi.security.http import HTTPAuthorizationCredentials
 
 from app.clients.anytype import AnytypeClient, get_anytype_client
 from app.helpers.api import APIError
-from app.helpers.schemas import DisplayCodeResponse
+from app.helpers.schemas import DisplayCodeResponse, TokenResponse
 from app.main import oauth2_scheme
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/display-code", response_model=DisplayCodeResponse)
+@router.post("/display_code", response_model=DisplayCodeResponse)
 async def get_auth_display_code(
-    app_name: str = "Anytype API",
+    app_name: str,
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> DisplayCodeResponse:
-    """Get display code for authentication"""
+    """Start new challenge"""
     try:
         return await client.get_auth_display_code(app_name)
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 
 
-@router.post("/token", response_model=Dict[str, Any])
+@router.post("/token", response_model=TokenResponse)
 async def get_token(
     code: str,
-    challenge_id: Optional[str] = None,
+    challenge_id: str,
     client: AnytypeClient = Depends(get_anytype_client),
-) -> Dict[str, Any]:
-    """Get authentication token from display code"""
+) -> TokenResponse:
+    """Retrieve token"""
     try:
         return await client.get_token(code, challenge_id)
-    except APIError as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e)) from e
-
-
-@router.post("/validate")
-async def validate_token(
-    credentials: HTTPAuthorizationCredentials = Depends(oauth2_scheme),
-    client: AnytypeClient = Depends(get_anytype_client),
-) -> Dict[str, bool]:
-    """Validate authentication token"""
-    try:
-        valid = await client.validate_token(credentials.credentials)
-        return {"valid": valid}
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e)) from e

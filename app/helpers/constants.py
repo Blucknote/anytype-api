@@ -12,10 +12,12 @@ ENDPOINTS = {
     "getExport": "/v1/spaces/{space_id}/objects/{object_id}/export/{format}",
     # Space operations
     "createSpace": "/v1/spaces",
+    "getSpace": "/v1/spaces/{space_id}",
     "getSpaces": "/v1/spaces",
     "getMembers": "/v1/spaces/{space_id}/members",
     # Type operations
     "getTypes": "/v1/spaces/{space_id}/types",
+    "getType": "/v1/spaces/{space_id}/types/{type_id}",
     "getTemplates": "/v1/spaces/{space_id}/types/{type_id}/templates",
     # Authentication
     "displayCode": "/v1/auth/display_code?app_name={app_name}",
