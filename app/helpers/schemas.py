@@ -29,10 +29,29 @@ class Icon(BaseModel):
 class PaginationMeta(BaseModel):
     """The pagination metadata for the response"""
 
-    has_more: Optional[bool] = None
-    limit: Optional[int] = None
-    offset: Optional[int] = None
-    total: Optional[int] = None
+    has_more: Optional[bool] = Field(
+        None,
+        description="Indicates if there are more items available beyond the current result set",
+        example=True,
+    )
+    limit: Optional[int] = Field(
+        None,
+        ge=1,
+        description="The maximum number of items returned in the result set",
+        example=100,
+    )
+    offset: Optional[int] = Field(
+        None,
+        ge=0,
+        description="The number of items skipped before starting to collect the result set",
+        example=0,
+    )
+    total: Optional[int] = Field(
+        None,
+        ge=0,
+        description="The total number of items available for the endpoint",
+        example=1000,
+    )
 
 
 class PaginatedResponse(BaseModel):
@@ -121,7 +140,8 @@ class Property(BaseModel):
     multi_select: Optional[List[Any]] = None  # TODO: Define Tag schema
     name: str
     number: Optional[float] = None
-    object: Optional[List[str]] = None
+    object: Optional[str] = None
+    objects: Optional[List[str]] = None
     phone: Optional[str] = None
     select: Optional[Any] = None  # TODO: Define Tag schema
     text: Optional[str] = None

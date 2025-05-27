@@ -70,7 +70,7 @@ MEMBER_ROLES = {
 
 # API Limits
 DEFAULT_PAGE_SIZE = 50
-MAX_PAGE_SIZE = 100
+MAX_PAGE_SIZE = 1000
 ICON_TIMEOUT = 5000  # milliseconds
 
 # System Types

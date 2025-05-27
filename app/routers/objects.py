@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.clients.anytype import AnytypeClient, get_anytype_client
 from app.helpers.api import APIError
+from app.helpers.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from app.helpers.schemas import (
     CreateObjectRequest,
     ExportFormat,
@@ -20,8 +21,8 @@ router = APIRouter(prefix="/spaces/{space_id}/objects", tags=["objects"])
 @router.get("", response_model=PaginatedObjectResponse, summary="List objects")
 async def list_objects(
     space_id: str,
-    limit: int = Query(default=100, ge=1, le=1000),
-    offset: int = Query(default=0, ge=0),
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
     token: str = Depends(get_validated_token),
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> PaginatedObjectResponse:
@@ -101,16 +102,15 @@ async def export_object(
 async def search_objects(
     space_id: str,
     request: SearchRequest,
-    limit: int = Query(default=100, ge=1, le=1000),
-    offset: int = Query(default=0, ge=0),
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
     token: str = Depends(get_validated_token),
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> PaginatedObjectResponse:
     """This endpoint performs a focused search within a single space."""
     try:
-        # Update limit and offset in the request object
-        request.limit = limit
-        request.offset = offset
-        return await client.search_objects(space_id, request, token=token)
+        return await client.search_objects(
+            space_id, request, limit, offset, token=token
+        )
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e)) from e

@@ -124,7 +124,7 @@ class AnytypeClient:
         return SpaceResponse(**result)
 
     async def get_spaces(
-        self, limit: int = 100, offset: int = 0, token: Optional[str] = None
+        self, limit: int = 50, offset: int = 0, token: Optional[str] = None
     ) -> PaginatedSpaceResponse:
         """Get list of spaces"""
         headers = self._get_headers()
@@ -158,7 +158,7 @@ class AnytypeClient:
     async def get_members(
         self,
         space_id: str,
-        limit: int = 100,
+        limit: int = 50,
         offset: int = 0,
         token: Optional[str] = None,
     ) -> PaginatedMemberResponse:
@@ -228,7 +228,7 @@ class AnytypeClient:
         space_id: str,
         list_id: str,
         view_id: str,
-        limit: int = 100,
+        limit: int = 50,
         offset: int = 0,
         token: Optional[str] = None,
     ) -> PaginatedObjectResponse:
@@ -292,7 +292,7 @@ class AnytypeClient:
         self,
         space_id: str,
         list_id: str,
-        limit: int = 100,
+        limit: int = 50,
         offset: int = 0,
         token: Optional[str] = None,
     ) -> PaginatedViewResponse:
@@ -313,7 +313,7 @@ class AnytypeClient:
     async def get_objects(
         self,
         space_id: str,
-        limit: int = 100,
+        limit: int = 50,
         offset: int = 0,
         token: Optional[str] = None,
     ) -> PaginatedObjectResponse:
@@ -383,7 +383,7 @@ class AnytypeClient:
     async def get_types(
         self,
         space_id: str,
-        limit: int = 100,
+        limit: int = 50,
         offset: int = 0,
         token: Optional[str] = None,
     ) -> PaginatedTypeResponse:
@@ -420,7 +420,7 @@ class AnytypeClient:
         self,
         space_id: str,
         type_id: str,
-        limit: int = 100,
+        limit: int = 50,
         offset: int = 0,
         token: Optional[str] = None,
     ) -> PaginatedTemplateResponse:

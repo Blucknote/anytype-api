@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.clients.anytype import AnytypeClient, get_anytype_client
 from app.helpers.api import APIError
+from app.helpers.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from app.helpers.schemas import (
     PaginatedTemplateResponse,
     PaginatedTypeResponse,
@@ -20,8 +21,8 @@ router = APIRouter(prefix="/spaces/{space_id}/types", tags=["types"])
 @router.get("", response_model=PaginatedTypeResponse, summary="List types")
 async def list_types(
     space_id: str,
-    limit: int = Query(default=100, ge=1, le=1000),
-    offset: int = Query(default=0, ge=0),
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
     token: str = Depends(get_validated_token),
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> PaginatedTypeResponse:
@@ -54,8 +55,8 @@ async def get_type(
 async def list_templates(
     space_id: str,
     type_id: str,
-    limit: int = Query(default=100, ge=1, le=1000),
-    offset: int = Query(default=0, ge=0),
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
     token: str = Depends(get_validated_token),
     client: AnytypeClient = Depends(get_anytype_client),
 ) -> PaginatedTemplateResponse:
