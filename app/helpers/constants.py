@@ -19,9 +19,9 @@ ENDPOINTS = {
     "getTypes": "/v1/spaces/{space_id}/types",
     "getType": "/v1/spaces/{space_id}/types/{type_id}",
     "getTemplates": "/v1/spaces/{space_id}/types/{type_id}/templates",
-    # Authentication
-    "displayCode": "/v1/auth/display_code?app_name={app_name}",
-    "getToken": "/v1/auth/token?challenge_id={challenge_id}&code={code}",
+    # Authentication (NEW)
+    "createChallenge": "/v1/auth/challenges",
+    "createApiKey": "/v1/auth/api_keys",
 }
 
 # Object URL patterns

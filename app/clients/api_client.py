@@ -13,7 +13,6 @@ from app.helpers.schemas import (
     CreateObjectRequest,
     CreateSpaceRequest,
     CreateSpaceResponse,
-    DisplayCodeResponse,
     ExportFormat,
     Member,
     Object,
@@ -56,29 +55,21 @@ class APIClient:
         endpoint = API_ENDPOINTS[category][name]
         return f"{BASE_PATH}{endpoint.format(**kwargs)}"
 
-    async def get_display_code(self, app_name: str) -> DisplayCodeResponse:
-        """Start new challenge"""
-        endpoint = self._get_endpoint("auth", "display_code")
-        result = await make_request(
-            "POST",
-            endpoint,
-            self.base_url,
-            params={"app_name": app_name},
-            headers=self.headers,
+    async def get_display_code(self, app_name: str):
+        """Start new challenge (DEPRECATED: use create_challenge instead)"""
+        # This method is deprecated and kept for backward compatibility.
+        # Replace with new challenge flow if needed.
+        raise NotImplementedError(
+            "get_display_code is deprecated. Use create_challenge instead."
         )
-        return DisplayCodeResponse(**result)
 
     async def get_token(self, challenge_id: str, code: str) -> TokenResponse:
-        """Retrieve token"""
-        endpoint = self._get_endpoint("auth", "token")
-        result = await make_request(
-            "POST",
-            endpoint,
-            self.base_url,
-            params={"challenge_id": challenge_id, "code": code},
-            headers=self.headers,
+        """Retrieve token (DEPRECATED: use create_api_key instead)"""
+        # This method is deprecated and kept for backward compatibility.
+        # Replace with new API key flow if needed.
+        raise NotImplementedError(
+            "get_token is deprecated. Use create_api_key instead."
         )
-        return TokenResponse(**result)
 
     async def validate_token(self, token: str) -> bool:
         """Validate authentication token"""

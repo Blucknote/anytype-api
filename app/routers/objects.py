@@ -1,7 +1,5 @@
 """Object management router"""
 
-from typing import Any, Dict, List, Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.clients.anytype import AnytypeClient, get_anytype_client
@@ -13,7 +11,6 @@ from app.helpers.schemas import (
     ObjectResponse,
     PaginatedObjectResponse,
     SearchRequest,
-    SortOptions,
 )
 from app.main import get_validated_token
 

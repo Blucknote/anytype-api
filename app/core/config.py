@@ -17,8 +17,7 @@ class Settings(BaseSettings):
 
     # Anytype Configuration
     anytype_api_url: AnyHttpUrl = Field(alias="ANYTYPE_API_URL")
-    anytype_session_token: str = Field(alias="ANYTYPE_SESSION_TOKEN")
-    anytype_app_key: str = Field(alias="ANYTYPE_APP_KEY")
+    anytype_api_key: str = Field(alias="ANYTYPE_API_KEY")
 
     # CORS Configuration
     cors_origins: List[str] = ["*"]

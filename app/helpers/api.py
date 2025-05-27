@@ -51,7 +51,7 @@ async def make_request(
         base_headers.update(headers)
 
     # Use provided token or fall back to environment variable
-    auth_token = token or os.getenv("ANYTYPE_APP_KEY")
+    auth_token = token or os.getenv("ANYTYPE_API_KEY")
     if auth_token:
         # Add token to headers for Bearer authentication
         base_headers["Authorization"] = f"Bearer {auth_token}"

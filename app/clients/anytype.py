@@ -14,9 +14,9 @@ from app.helpers.api import (
     validate_response,
 )
 from app.helpers.schemas import (
+    ChallengeResponse,
     CreateObjectRequest,
     CreateSpaceRequest,
-    DisplayCodeResponse,
     ExportFormat,
     MemberResponse,
     ObjectExportResponse,
@@ -45,14 +45,10 @@ class AnytypeClient:
     def __init__(
         self,
         base_url: str = str(settings.anytype_api_url),
-        session_token: str = settings.anytype_session_token,
-        app_key: str = settings.anytype_app_key,
-        bearer_token: Optional[str] = None,
+        api_key: str = settings.anytype_api_key,
     ):
         self.base_url = base_url
-        self.session_token = session_token
-        self.app_key = app_key
-        self.bearer_token = bearer_token
+        self.api_key = api_key
         self.headers = {"Content-Type": "application/json"}
         self.app_name: Optional[str] = None
         self.challenge_id: Optional[str] = None
@@ -79,50 +75,36 @@ class AnytypeClient:
                 return False
             raise
 
-    async def get_token(
-        self, code: str, challenge_id: Optional[str] = None
-    ) -> TokenResponse:
-        """Get authentication token from display code"""
+    async def create_challenge(
+        self, app_name: str = "Anytype API"
+    ) -> ChallengeResponse:
+        """Create authentication challenge (step 1 of new auth flow)"""
+        self.app_name = app_name
         headers = {**self.headers}
-        if self.app_name:
-            headers["X-App-Name"] = self.app_name
-        if challenge_id is None:
-            challenge_id = self.challenge_id
-        if not challenge_id:
-            raise APIError(
-                "No challenge_id available. Call get_auth_display_code first."
-            )
-
-        data = {"token": self.session_token} if self.session_token else None
+        data = {"app_name": app_name}
         result = await make_request(
             "POST",
-            get_endpoint("getToken", challenge_id=challenge_id, code=code),
+            get_endpoint("createChallenge"),
+            str(self.base_url),
+            data=data,
+            headers=headers,
+        )
+        # The API returns a ChallengeResponse structure directly
+        return ChallengeResponse(**result)
+
+    async def create_api_key(self, code: str, challenge_id: str) -> TokenResponse:
+        """Create API key using challenge_id and code (step 2 of new auth flow)"""
+        headers = {**self.headers}
+        data = {"challenge_id": challenge_id, "code": code}
+        result = await make_request(
+            "POST",
+            get_endpoint("createApiKey"),
             str(self.base_url),
             data=data,
             headers=headers,
         )
         # The API returns a TokenResponse structure directly
         return TokenResponse(**result)
-
-    async def get_auth_display_code(
-        self, app_name: str = "Anytype API"
-    ) -> DisplayCodeResponse:
-        """Get display code for authentication"""
-        self.app_name = app_name
-        headers = {**self.headers, "X-App-Name": app_name}
-        data = {"app_name": app_name}
-        if self.session_token:
-            data["token"] = self.session_token
-
-        result = await make_request(
-            "POST",
-            get_endpoint("displayCode", app_name=app_name),
-            str(self.base_url),
-            data=data,
-            headers=headers,
-        )
-        # The API returns a DisplayCodeResponse structure directly
-        return DisplayCodeResponse(**result)
 
     async def create_space(
         self, request: CreateSpaceRequest, token: Optional[str] = None
@@ -507,9 +489,9 @@ class AnytypeClient:
             headers["X-App-Name"] = self.app_name
         return headers
 
-    def _get_token(self, token: Optional[str] = None) -> Optional[str]:
-        """Get the most appropriate token to use"""
-        return token or self.bearer_token or self.session_token
+    def _get_token(self, token: Optional[str] = None) -> str:
+        """Get the token to use for requests"""
+        return token or self.api_key
 
 
 # FastAPI dependency

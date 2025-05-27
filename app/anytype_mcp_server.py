@@ -12,9 +12,7 @@ from app.helpers.schemas import (
     CreateObjectRequest,
     CreateSpaceRequest,
     ExportFormat,
-    Member,
     MemberResponse,
-    Object,
     ObjectExportResponse,
     ObjectResponse,
     PaginatedMemberResponse,
@@ -24,12 +22,8 @@ from app.helpers.schemas import (
     PaginatedTypeResponse,
     PaginatedViewResponse,
     SearchRequest,
-    SortOptions,
-    Space,
     SpaceResponse,
-    Template,
     TemplateResponse,
-    Type,
     TypeResponse,
 )
 
@@ -38,14 +32,11 @@ logger = logging.getLogger("anytype_mcp_server")
 mcp = FastMCP("anytype-api")
 
 API_URL = os.environ.get("ANYTYPE_API_URL", "")
-SESSION_TOKEN = os.environ.get("ANYTYPE_SESSION_TOKEN", "")
-APP_KEY = os.environ.get("ANYTYPE_APP_KEY", "")
-TOKEN = APP_KEY
+ANYTYPE_API_KEY = os.environ.get("ANYTYPE_API_KEY", "")
 
 client = AnytypeClient(
     base_url=API_URL,
-    session_token=SESSION_TOKEN,
-    app_key=APP_KEY,
+    api_key=ANYTYPE_API_KEY,  # Client's own API key for its operations
 )
 
 
@@ -66,7 +57,7 @@ def extract_token_from_request(request: Request) -> Optional[str]:
 async def create_object(
     space_id: str,
     request: CreateObjectRequest,
-    token: Optional[str] = TOKEN,
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> ObjectResponse:
     """
     Create a new object in Anytype.
@@ -84,7 +75,7 @@ async def create_object(
 
 @mcp.tool()
 async def get_object(
-    space_id: str, object_id: str, token: Optional[str] = TOKEN
+    space_id: str, object_id: str, token: Optional[str] = ANYTYPE_API_KEY
 ) -> ObjectResponse:
     """
     Get object details
@@ -101,7 +92,7 @@ async def list_objects(
     space_id: str,
     limit: Optional[int] = 100,
     offset: Optional[int] = 0,
-    token: Optional[str] = TOKEN,
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> PaginatedObjectResponse:
     """
     Get objects list
@@ -117,7 +108,7 @@ async def list_objects(
 
 @mcp.tool()
 async def delete_object(
-    space_id: str, object_id: str, token: Optional[str] = TOKEN
+    space_id: str, object_id: str, token: Optional[str] = ANYTYPE_API_KEY
 ) -> ObjectResponse:
     """
     Delete an object from Anytype
@@ -131,7 +122,7 @@ async def delete_object(
 
 @mcp.tool()
 async def search_objects(
-    space_id: str, request: SearchRequest, token: Optional[str] = TOKEN
+    space_id: str, request: SearchRequest, token: Optional[str] = ANYTYPE_API_KEY
 ) -> PaginatedObjectResponse:
     """
     Search for objects within a space with advanced filtering and sorting
@@ -145,7 +136,7 @@ async def search_objects(
 
 @mcp.tool()
 async def global_search(
-    request: SearchRequest, token: Optional[str] = TOKEN
+    request: SearchRequest, token: Optional[str] = ANYTYPE_API_KEY
 ) -> PaginatedObjectResponse:
     """
     Global search across all spaces
@@ -161,7 +152,7 @@ async def export_object(
     space_id: str,
     object_id: str,
     format: ExportFormat = ExportFormat.MARKDOWN,
-    token: Optional[str] = TOKEN,
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> ObjectExportResponse:
     """
     Export an object in the specified format
@@ -176,7 +167,7 @@ async def export_object(
 
 @mcp.tool()
 async def create_space(
-    request: CreateSpaceRequest, token: Optional[str] = TOKEN
+    request: CreateSpaceRequest, token: Optional[str] = ANYTYPE_API_KEY
 ) -> SpaceResponse:
     """
     Create a new space in Anytype
@@ -188,10 +179,24 @@ async def create_space(
 
 
 @mcp.tool()
+async def get_space(
+    space_id: str, token: Optional[str] = ANYTYPE_API_KEY
+) -> SpaceResponse:
+    """
+    Get space details.
+
+    Args:
+        space_id: ID of the space to retrieve.
+        token: Optional authentication token.
+    """
+    return await client.get_space(space_id, token=token)
+
+
+@mcp.tool()
 async def list_spaces(
     limit: int = 100,
     offset: int = 0,
-    token: Optional[str] = TOKEN,
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> PaginatedSpaceResponse:
     """
     Get list of spaces
@@ -208,7 +213,7 @@ async def list_members(
     space_id: str,
     limit: int = 100,
     offset: int = 0,
-    token: Optional[str] = TOKEN,
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> PaginatedMemberResponse:
     """
     Get space members
@@ -223,7 +228,7 @@ async def list_members(
 
 @mcp.tool()
 async def get_member(
-    space_id: str, member_id: str, token: Optional[str] = TOKEN
+    space_id: str, member_id: str, token: Optional[str] = ANYTYPE_API_KEY
 ) -> MemberResponse:
     """
     Get space member details
@@ -240,7 +245,7 @@ async def list_types(
     space_id: str,
     limit: int = 100,
     offset: int = 0,
-    token: Optional[str] = TOKEN,
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> PaginatedTypeResponse:
     """
     Get object types
@@ -255,7 +260,7 @@ async def list_types(
 
 @mcp.tool()
 async def get_type(
-    space_id: str, type_id: str, token: Optional[str] = TOKEN
+    space_id: str, type_id: str, token: Optional[str] = ANYTYPE_API_KEY
 ) -> TypeResponse:
     """
     Get object type details
@@ -273,7 +278,7 @@ async def list_templates(
     type_id: str,
     limit: int = 100,
     offset: int = 0,
-    token: Optional[str] = TOKEN,
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> PaginatedTemplateResponse:
     """
     Get templates
@@ -289,7 +294,10 @@ async def list_templates(
 
 @mcp.tool()
 async def get_template(
-    space_id: str, type_id: str, template_id: str, token: Optional[str] = TOKEN
+    space_id: str,
+    type_id: str,
+    template_id: str,
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> TemplateResponse:
     """
     Get template details
@@ -309,7 +317,7 @@ async def get_objects_in_list(
     view_id: str,
     limit: int = 100,
     offset: int = 0,
-    token: Optional[str] = TOKEN,
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> PaginatedObjectResponse:
     """
     Get objects in a list
@@ -328,7 +336,10 @@ async def get_objects_in_list(
 
 @mcp.tool()
 async def add_objects_to_list(
-    space_id: str, list_id: str, object_ids: List[str], token: Optional[str] = TOKEN
+    space_id: str,
+    list_id: str,
+    object_ids: List[str],
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> str:
     """
     Add objects to a list (collection only)
@@ -343,7 +354,7 @@ async def add_objects_to_list(
 
 @mcp.tool()
 async def remove_object_from_list(
-    space_id: str, list_id: str, object_id: str, token: Optional[str] = TOKEN
+    space_id: str, list_id: str, object_id: str, token: Optional[str] = ANYTYPE_API_KEY
 ) -> str:
     """
     Remove object from a list (collection only)
@@ -364,7 +375,7 @@ async def get_list_views(
     list_id: str,
     limit: int = 100,
     offset: int = 0,
-    token: Optional[str] = TOKEN,
+    token: Optional[str] = ANYTYPE_API_KEY,
 ) -> PaginatedViewResponse:
     """
     Get list views

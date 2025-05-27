@@ -42,7 +42,7 @@ class PaginatedResponse(BaseModel):
     pagination: Optional[PaginationMeta] = None
 
 
-class DisplayCodeResponse(BaseModel):
+class ChallengeResponse(BaseModel):
     """Challenge ID"""
 
     challenge_id: str
@@ -51,8 +51,7 @@ class DisplayCodeResponse(BaseModel):
 class TokenResponse(BaseModel):
     """Authentication token"""
 
-    app_key: str
-    session_token: str
+    api_key: str
 
 
 class ExportFormat(str, Enum):
