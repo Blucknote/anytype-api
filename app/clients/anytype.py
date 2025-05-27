@@ -347,16 +347,23 @@ class AnytypeClient:
         return ObjectResponse(**result)
 
     async def search_objects(
-        self, space_id: str, request: SearchRequest, token: Optional[str] = None
+        self,
+        space_id: str,
+        request: SearchRequest,
+        limit: int = 50,
+        offset: int = 0,
+        token: Optional[str] = None,
     ) -> PaginatedObjectResponse:
         """Search for objects within a space"""
         data = prepare_request_data(request.dict())
         headers = self._get_headers()
+        params = {"limit": limit, "offset": offset}
         result = await make_request(
             "POST",
             get_endpoint("searchObjects", space_id=space_id),
             str(self.base_url),
             data=data,
+            params=params,
             headers=headers,
             token=self._get_token(token),
         )
