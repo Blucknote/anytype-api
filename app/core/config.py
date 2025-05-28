@@ -13,10 +13,12 @@ class Settings(BaseSettings):
     # API Configuration
     api_title: str = "Anytype API"
     api_description: str = "FastAPI backend for Anytype integration"
-    api_version: str = "1.0.0"
+    api_version: str = "1.0.1"
 
     # Anytype Configuration
-    anytype_api_url: AnyHttpUrl = Field(alias="ANYTYPE_API_URL")
+    anytype_api_url: AnyHttpUrl = Field(
+        default="http://localhost:31009", alias="ANYTYPE_API_URL"
+    )
     anytype_api_key: str = Field(alias="ANYTYPE_API_KEY")
 
     # CORS Configuration
