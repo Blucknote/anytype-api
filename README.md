@@ -57,8 +57,10 @@ The MCP server uses the following environment variables (should be set in `.env`
 - Open Anytype it should be running in whole process and also should be launched whenever requests is expected
 - run uv run uvicorn app.main:app --port 8081 (or other port)
 - open http://localhost:8081/docs
-- /auth/display_code will show display code and return challenge_id
-- both of that goes to /auth/tokenwhich will return app_key and session_token
+- <img width="497" alt="image" src="https://github.com/user-attachments/assets/9e002297-d425-4a57-a916-dd1e1ac430db" />
+- /auth/challenge will show display code and return challenge_id
+- both of that goes to /auth/api_key which will return api_key
+- <img width="588" alt="image" src="https://github.com/user-attachments/assets/a202caef-25e7-4bf7-994f-6854f3c11a0a" />
 - paste "API Key" to `.env` file
 
 
