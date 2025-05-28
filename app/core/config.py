@@ -16,7 +16,9 @@ class Settings(BaseSettings):
     api_version: str = "1.0.1"
 
     # Anytype Configuration
-    anytype_api_url: AnyHttpUrl = Field(default="http://localhost:31009", alias="ANYTYPE_API_URL")
+    anytype_api_url: AnyHttpUrl = Field(
+        default="http://localhost:31009", alias="ANYTYPE_API_URL"
+    )
     anytype_api_key: str = Field(alias="ANYTYPE_API_KEY")
 
     # CORS Configuration

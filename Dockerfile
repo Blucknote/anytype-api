@@ -14,8 +14,5 @@ RUN pip install --upgrade pip \
 # Copy the rest of the application code
 COPY . /app
 
-# Expose MCP server port
-EXPOSE 8000
-
 # Default command to run the MCP server
 CMD ["python", "-m", "app.anytype_mcp_server"]
