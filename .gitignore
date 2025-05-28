@@ -47,4 +47,9 @@ env/
 
 # other
 .goose
+.plandex*
+
+# cache
 .ruff_cache
+.mypy_cache
+.pytest_cache

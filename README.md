@@ -17,9 +17,9 @@ cd anytype-api
 
 2. Create a virtual environment and install dependencies:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-uv pip install -e .[dev]
+uv venv  # Creates a virtual environment in .venv directory
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install -e .
 ```
 
 ## Running the Application
@@ -39,39 +39,35 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 Once the application is running, you can access the interactive API documentation at:
 - http://localhost:8000/docs
 
-## Testing
-
-```bash
-# Run all tests
-pytest
-
-# Run tests with coverage report
-pytest --cov=app
-```
 
 ## MCP Server
 
 This project includes an **MCP (Model Context Protocol) server** implementation that exposes Anytype API operations as MCP tools, enabling integration with MCP-compatible clients.
 
-### Overview
-
 
 ### Configuration
 
-The MCP server uses the following environment variables (can be set in `.env` file):
+The MCP server uses the following environment variables (should be set in `.env` file):
 
 - `ANYTYPE_API_URL` — Base URL of the Anytype API (e.g., `http://localhost:31009`)
-- `ANYTYPE_SESSION_TOKEN` — Session token for API access
-- `ANYTYPE_APP_KEY` — Application key for authentication
+- `ANYTYPE_API_KEY` — API key for authentication
 
-Choose SSE type and http://localhost:8000/sse for endpoint
+### Obtaining API Key
+
+- Open Anytype it should be running in whole process and also should be launched whenever requests is expected
+- run uv run uvicorn app.main:app --port 8081 (or other port)
+- open http://localhost:8081/docs
+- /auth/display_code will show display code and return challenge_id
+- both of that goes to /auth/tokenwhich will return app_key and session_token
+- paste "API Key" to `.env` file
+
 
 ### Running the MCP Server
 
 You can run the MCP server directly:
 
 ```bash
-python app/anytype_mcp_server.py
+uv run app/anytype_mcp_server.py
 ```
 
 or inside Docker (see below).
@@ -93,6 +89,8 @@ docker run --rm --env-file .env --network host anytype-api
 ```
 
 This will start the API server with environment variables loaded from `.env` and network mode set to host.
+
+In target MCP client choose SSE type and http://localhost:8000/sse for endpoint
 
 ## License
 
