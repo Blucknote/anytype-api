@@ -29,7 +29,10 @@ from app.helpers.schemas import (
 
 logger = logging.getLogger("anytype_mcp_server")
 
-mcp = FastMCP("anytype-api")
+mcp = FastMCP(
+    name="anytype-api",
+    port=os.getenv("PORT"),
+    transport="sse")
 
 API_URL = os.environ.get("ANYTYPE_API_URL", "")
 ANYTYPE_API_KEY = os.environ.get("ANYTYPE_API_KEY", "")
