@@ -11,6 +11,7 @@ from app.clients.anytype import AnytypeClient
 from app.helpers.schemas import (
     CreateObjectRequest,
     CreateSpaceRequest,
+    CreateTagRequest,
     ExportFormat,
     MemberResponse,
     ObjectExportResponse,
@@ -18,13 +19,16 @@ from app.helpers.schemas import (
     PaginatedMemberResponse,
     PaginatedObjectResponse,
     PaginatedSpaceResponse,
+    PaginatedTagResponse,
     PaginatedTemplateResponse,
     PaginatedTypeResponse,
     PaginatedViewResponse,
     SearchRequest,
     SpaceResponse,
+    TagResponse,
     TemplateResponse,
     TypeResponse,
+    UpdateTagRequest,
 )
 
 logger = logging.getLogger("anytype_mcp_server")
@@ -389,6 +393,100 @@ async def get_list_views(
         offset: Number of views to skip
     """
     return await client.get_list_views(space_id, list_id, limit, offset, token=token)
+
+
+@mcp.tool()
+async def list_tags(
+    space_id: str,
+    property_id: str,
+    limit: int = 50,
+    offset: int = 0,
+    token: Optional[str] = ANYTYPE_API_KEY,
+) -> PaginatedTagResponse:
+    """
+    Get tags for a property
+
+    Args:
+        space_id: ID of the space containing the property.
+        property_id: ID of the property to list tags for.
+        limit: Maximum number of tags to return (1-1000)
+        offset: Number of tags to skip
+    """
+    return await client.get_tags(space_id, property_id, limit, offset, token=token)
+
+
+@mcp.tool()
+async def get_tag(
+    space_id: str,
+    property_id: str,
+    tag_id: str,
+    token: Optional[str] = ANYTYPE_API_KEY,
+) -> TagResponse:
+    """
+    Get tag details
+
+    Args:
+        space_id: ID of the space containing the property.
+        property_id: ID of the property containing the tag.
+        tag_id: ID of the tag to retrieve.
+    """
+    return await client.get_tag(space_id, property_id, tag_id, token=token)
+
+
+@mcp.tool()
+async def create_tag(
+    space_id: str,
+    property_id: str,
+    request: CreateTagRequest,
+    token: Optional[str] = ANYTYPE_API_KEY,
+) -> TagResponse:
+    """
+    Create a new tag
+
+    Args:
+        space_id: ID of the space containing the property.
+        property_id: ID of the property to create the tag for.
+        request: Tag creation details including name and color.
+    """
+    return await client.create_tag(space_id, property_id, request, token=token)
+
+
+@mcp.tool()
+async def update_tag(
+    space_id: str,
+    property_id: str,
+    tag_id: str,
+    request: UpdateTagRequest,
+    token: Optional[str] = ANYTYPE_API_KEY,
+) -> TagResponse:
+    """
+    Update an existing tag
+
+    Args:
+        space_id: ID of the space containing the property.
+        property_id: ID of the property containing the tag.
+        tag_id: ID of the tag to update.
+        request: Tag update details including name and color.
+    """
+    return await client.update_tag(space_id, property_id, tag_id, request, token=token)
+
+
+@mcp.tool()
+async def delete_tag(
+    space_id: str,
+    property_id: str,
+    tag_id: str,
+    token: Optional[str] = ANYTYPE_API_KEY,
+) -> TagResponse:
+    """
+    Delete a tag
+
+    Args:
+        space_id: ID of the space containing the property.
+        property_id: ID of the property containing the tag.
+        tag_id: ID of the tag to delete.
+    """
+    return await client.delete_tag(space_id, property_id, tag_id, token=token)
 
 
 if __name__ == "__main__":
