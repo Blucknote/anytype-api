@@ -54,6 +54,19 @@ The MCP server uses the following environment variables (should be set in `.env`
 
 ### Obtaining API Key
 
+You can obtain an API key using either of these methods:
+
+#### Method 1: Using the Utility Script (Recommended)
+
+Run the included utility script:
+```bash
+uv run get_api_key.py
+```
+
+This interactive script will guide you through the process of obtaining your API key.
+
+#### Method 2: Manual Process
+
 - Open Anytype it should be running in whole process and also should be launched whenever requests is expected
 - run uv run uvicorn app.main:app --port 8081 (or other port)
 - open http://localhost:8081/docs
