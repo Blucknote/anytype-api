@@ -75,7 +75,9 @@ async def update_tag(
 ) -> TagResponse:
     """Updates a tag for a given property id in a space."""
     try:
-        return await client.update_tag(space_id, property_id, tag_id, request, token=token)
+        return await client.update_tag(
+            space_id, property_id, tag_id, request, token=token
+        )
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e)) from e
 

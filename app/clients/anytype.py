@@ -522,7 +522,9 @@ class AnytypeClient:
         headers = self._get_headers()
         result = await make_request(
             "GET",
-            get_endpoint("getTag", space_id=space_id, property_id=property_id, tag_id=tag_id),
+            get_endpoint(
+                "getTag", space_id=space_id, property_id=property_id, tag_id=tag_id
+            ),
             str(self.base_url),
             headers=headers,
             token=self._get_token(token),
@@ -564,7 +566,9 @@ class AnytypeClient:
         headers = self._get_headers()
         result = await make_request(
             "PATCH",
-            get_endpoint("updateTag", space_id=space_id, property_id=property_id, tag_id=tag_id),
+            get_endpoint(
+                "updateTag", space_id=space_id, property_id=property_id, tag_id=tag_id
+            ),
             str(self.base_url),
             data=data,
             headers=headers,
@@ -580,7 +584,9 @@ class AnytypeClient:
         headers = self._get_headers()
         result = await make_request(
             "DELETE",
-            get_endpoint("deleteTag", space_id=space_id, property_id=property_id, tag_id=tag_id),
+            get_endpoint(
+                "deleteTag", space_id=space_id, property_id=property_id, tag_id=tag_id
+            ),
             str(self.base_url),
             headers=headers,
             token=self._get_token(token),
