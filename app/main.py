@@ -71,7 +71,7 @@ async def get_validated_token(
 
 
 # Include routers
-from .routers import auth, objects, spaces, types
+from .routers import auth, objects, spaces, tags, types
 
 # Include routers
 routers: List[APIRouter] = [
@@ -79,6 +79,7 @@ routers: List[APIRouter] = [
     cast(APIRouter, spaces.router),
     cast(APIRouter, objects.router),
     cast(APIRouter, types.router),
+    cast(APIRouter, tags.router),
 ]
 
 for router in routers:

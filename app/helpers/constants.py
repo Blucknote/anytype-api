@@ -22,6 +22,12 @@ ENDPOINTS = {
     # Authentication (NEW)
     "createChallenge": "/v1/auth/challenges",
     "createApiKey": "/v1/auth/api_keys",
+    # Tag operations
+    "getTags": "/v1/spaces/{space_id}/properties/{property_id}/tags",
+    "getTag": "/v1/spaces/{space_id}/properties/{property_id}/tags/{tag_id}",
+    "createTag": "/v1/spaces/{space_id}/properties/{property_id}/tags",
+    "updateTag": "/v1/spaces/{space_id}/properties/{property_id}/tags/{tag_id}",
+    "deleteTag": "/v1/spaces/{space_id}/properties/{property_id}/tags/{tag_id}",
 }
 
 # Object URL patterns

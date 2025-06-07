@@ -17,6 +17,7 @@ from app.helpers.schemas import (
     ChallengeResponse,
     CreateObjectRequest,
     CreateSpaceRequest,
+    CreateTagRequest,
     ExportFormat,
     MemberResponse,
     ObjectExportResponse,
@@ -24,15 +25,18 @@ from app.helpers.schemas import (
     PaginatedMemberResponse,
     PaginatedObjectResponse,
     PaginatedSpaceResponse,
+    PaginatedTagResponse,
     PaginatedTemplateResponse,
     PaginatedTypeResponse,
     PaginatedViewResponse,
     SearchRequest,
     SortOptions,
     SpaceResponse,
+    TagResponse,
     TemplateResponse,
     TokenResponse,
     TypeResponse,
+    UpdateTagRequest,
     View,
 )
 
@@ -110,7 +114,7 @@ class AnytypeClient:
         self, request: CreateSpaceRequest, token: Optional[str] = None
     ) -> SpaceResponse:
         """Create a new space"""
-        data = prepare_request_data(request.dict())
+        data = prepare_request_data(request.model_dump())
         headers = self._get_headers()
         result = await make_request(
             "POST",
@@ -488,6 +492,101 @@ class AnytypeClient:
         )
         # The API returns an ObjectExportResponse structure directly
         return ObjectExportResponse(**result)
+
+    async def get_tags(
+        self,
+        space_id: str,
+        property_id: str,
+        limit: int = 50,
+        offset: int = 0,
+        token: Optional[str] = None,
+    ) -> PaginatedTagResponse:
+        """Get tags for a property"""
+        headers = self._get_headers()
+        params = {"limit": limit, "offset": offset}
+        result = await make_request(
+            "GET",
+            get_endpoint("getTags", space_id=space_id, property_id=property_id),
+            str(self.base_url),
+            params=params,
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a PaginatedResponse structure directly
+        return PaginatedTagResponse(**result)
+
+    async def get_tag(
+        self, space_id: str, property_id: str, tag_id: str, token: Optional[str] = None
+    ) -> TagResponse:
+        """Get tag details"""
+        headers = self._get_headers()
+        result = await make_request(
+            "GET",
+            get_endpoint("getTag", space_id=space_id, property_id=property_id, tag_id=tag_id),
+            str(self.base_url),
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a TagResponse structure directly
+        return TagResponse(**result)
+
+    async def create_tag(
+        self,
+        space_id: str,
+        property_id: str,
+        request: CreateTagRequest,
+        token: Optional[str] = None,
+    ) -> TagResponse:
+        """Create a new tag"""
+        data = prepare_request_data(request.dict())
+        headers = self._get_headers()
+        result = await make_request(
+            "POST",
+            get_endpoint("createTag", space_id=space_id, property_id=property_id),
+            str(self.base_url),
+            data=data,
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a TagResponse structure directly
+        return TagResponse(**result)
+
+    async def update_tag(
+        self,
+        space_id: str,
+        property_id: str,
+        tag_id: str,
+        request: UpdateTagRequest,
+        token: Optional[str] = None,
+    ) -> TagResponse:
+        """Update an existing tag"""
+        data = prepare_request_data(request.dict())
+        headers = self._get_headers()
+        result = await make_request(
+            "PATCH",
+            get_endpoint("updateTag", space_id=space_id, property_id=property_id, tag_id=tag_id),
+            str(self.base_url),
+            data=data,
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a TagResponse structure directly
+        return TagResponse(**result)
+
+    async def delete_tag(
+        self, space_id: str, property_id: str, tag_id: str, token: Optional[str] = None
+    ) -> TagResponse:
+        """Delete a tag"""
+        headers = self._get_headers()
+        result = await make_request(
+            "DELETE",
+            get_endpoint("deleteTag", space_id=space_id, property_id=property_id, tag_id=tag_id),
+            str(self.base_url),
+            headers=headers,
+            token=self._get_token(token),
+        )
+        # The API returns a TagResponse structure directly
+        return TagResponse(**result)
 
     def _get_headers(self) -> Dict[str, str]:
         """Get request headers with optional app name"""

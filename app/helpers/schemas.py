@@ -372,3 +372,36 @@ class UnauthorizedError(BaseModel):
 
 class ValidationError(BaseModel):
     error: ErrorDetail
+
+
+# Tag Schemas
+class Tag(BaseModel):
+    """Tag model"""
+
+    id: str
+    name: str
+    color: str
+
+
+class TagResponse(BaseModel):
+    """Tag response"""
+
+    tag: Tag
+
+
+class CreateTagRequest(BaseModel):
+    """Request to create a tag"""
+
+    name: str
+    color: str
+
+
+class UpdateTagRequest(BaseModel):
+    """Request to update a tag"""
+
+    name: str
+    color: str
+
+
+class PaginatedTagResponse(PaginatedResponse):
+    data: List[Tag]
