@@ -1,3 +1,11 @@
+# Anytype team finnaly launched their own MCP server
+https://github.com/anyproto/anytype-mcp
+
+So this repo does not have any sense now and will be set to public archieve soon
+
+
+---
+
 # Anytype FastAPI Backend
 
 A FastAPI-based backend service for interacting with Anytype. This is a Python port of the [Raycast Anytype Extension](https://github.com/raycast/extensions/tree/main/extensions/anytype), providing RESTful API access to Anytype functionality.
